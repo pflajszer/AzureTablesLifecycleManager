@@ -30,9 +30,10 @@ namespace AzureTablesLifecycleManager.AzureDAL.APIGateway
 			return _tableServiceClient.Query();
 		}
 
-		public TableItem CreateTable(string tableName)
+		public Response<TableItem> CreateTable(string tableName)
 		{
-			return _tableServiceClient.CreateTableIfNotExists(tableName);
+			var table =  _tableServiceClient.CreateTableIfNotExists(tableName);
+			return table;
 		}
 
 		public Response DeleteTable(TableItem table)

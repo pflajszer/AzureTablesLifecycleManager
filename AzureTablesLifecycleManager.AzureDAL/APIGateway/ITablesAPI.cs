@@ -8,7 +8,7 @@ namespace AzureTablesLifecycleManager.AzureDAL.APIGateway
 {
 	public interface ITablesAPI
 	{
-		TableItem CreateTable(string tableName);
+		Response<TableItem> CreateTable(string tableName);
 		Response DeleteTable(TableItem table);
 		Task<Response> DeleteTableAsync(TableItem table);
 		Pageable<TableItem> GetAllTables();
