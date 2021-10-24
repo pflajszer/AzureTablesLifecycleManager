@@ -2,6 +2,23 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>Pawel Flajszer</Authors>
+    <Product>AzureTablesLifecycleManager</Product>
+    <Description>Helper library for Lifecycle Management in Azure Tables</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/pflajszer/AzureTablesLifecycleManager</RepositoryUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AzureTablesLifecycleManager.AzureDAL\AzureTablesLifecycleManager.AzureDAL.csproj" />
+  </ItemGroup>
 
 </Project>

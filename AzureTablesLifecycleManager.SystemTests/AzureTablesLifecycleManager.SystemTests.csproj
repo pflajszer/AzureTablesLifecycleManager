@@ -5,11 +5,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.2.1" />
+    <PackageReference Include="AzureTablesLifecycleManager.Lib" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.13" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AzureTablesLifecycleManager.AzureDAL\AzureTablesLifecycleManager.AzureDAL.csproj" />
     <ProjectReference Include="..\AzureTablesLifecycleManager.BRL\AzureTablesLifecycleManager.BRL.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -17,7 +17,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="local.settings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
   </ItemGroup>

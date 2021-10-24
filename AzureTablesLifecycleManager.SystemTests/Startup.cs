@@ -1,6 +1,6 @@
 ﻿using Azure.Data.Tables;
 using AzureTablesLifecycleManager.AzureDAL.APIGateway;
-using AzureTablesLifecycleManager.BRL.Services;
+using AzureTablesLifecycleManager.Lib.Services;
 using AzureTablesLifecycleManager.SystemTests;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -14,10 +14,9 @@ namespace AzureTablesLifecycleManager.SystemTests
 		public override void Configure(IFunctionsHostBuilder builder)
 		{
 			builder.Services.AddSingleton(p => new TableServiceClient(p.GetService<IConfiguration>()["AzureWebJobsStorage"]));
-			//builder.Services.AddSingleton(p => new TableClient());
-			builder.Services.AddSingleton<ITablesAPI, TablesAPI>();
-			builder.Services.AddSingleton<ITableEntitiesAPI, TableEntitiesAPI>();
-			builder.Services.AddSingleton<TableInquisitor>();
+			builder.Services.AddSingleton<ITableRepository, TableRepository>();
+			builder.Services.AddSingleton<ITableManager, TableManager>();
+			builder.Services.AddSingleton<IQueryBuilder, QueryBuilder>();
 		}
 	}
 }
