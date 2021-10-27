@@ -26,6 +26,7 @@ namespace AzureTablesLifecycleManager.AzureDAL.APIGateway
 		Pageable<TableItem> GetTables(string filter);
 		IList<Response> AddTableEntities<T>(string tableName, List<T> entities) where T : class, ITableEntity, new();
 		Task<IList<Response>> AddTableEntitiesAsync<T>(string tableName, List<T> entities) where T : class, ITableEntity, new();
+		Task<IList<Response>> AddTableEntitiesAsync<T>(string tableName, AsyncPageable<T> entities) where T : class, ITableEntity, new();
 		IList<Response> DeleteTableEntities<T>(string tableName, Expression<Func<T, bool>> filter = null) where T : class, ITableEntity, new();
 		Task<IList<Response>> DeleteTableEntitiesAsync<T>(string tableName, Expression<Func<T, bool>> filter = null) where T : class, ITableEntity, new();
 		Task<IList<Response>> DeleteTableEntitiesAsync<T>(string tableName, string filter) where T : class, ITableEntity, new();

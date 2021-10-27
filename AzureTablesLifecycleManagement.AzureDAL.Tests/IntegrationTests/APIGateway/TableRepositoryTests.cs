@@ -294,7 +294,7 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 		}
 
 		[Fact]
-		public async Task AddTableEntitiesAsync_SeedDataProvided_SuccessfullyAddedEntities()
+		public async Task AddTableEntitiesAsync_SeedDataProvidedAsList_SuccessfullyAddedEntities()
 		{
 			var tableName = EntityFactory.GenerateTableName("TEST");
 			var table = _sut.CreateTable(tableName);
@@ -303,6 +303,29 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 
 			// Act
 			var resps = await _sut.AddTableEntitiesAsync<TableEntity>(tableName, seedData);
+
+
+			// Assert
+			foreach (var item in resps)
+			{
+				Assert.Equal(204, item.Status);
+			}
+
+			// Clean up
+			_sut.DeleteTable(table);
+		}
+
+		[Fact]
+		public async Task AddTableEntitiesAsync_SeedDataProvidedAsAsyncPageable_SuccessfullyAddedEntities()
+		{
+			var tableName = EntityFactory.GenerateTableName("TEST");
+			var table = _sut.CreateTable(tableName);
+			var seedData = EntityFactory.GetVariedSeedData(25);
+			var dataInAsyncPageableFormat = _sut.GetTableEntitiesAsync<TableEntity>(tableName);
+
+
+			// Act
+			var resps = await _sut.AddTableEntitiesAsync<TableEntity>(tableName, dataInAsyncPageableFormat);
 
 
 			// Assert

@@ -1,6 +1,7 @@
 ﻿using Azure.Data.Tables;
 using AzureTablesLifecycleManager.AzureDAL.APIGateway;
 using AzureTablesLifecycleManager.AzureDAL.Models;
+using AzureTablesLifecycleManager.Lib.Models.Shared;
 using AzureTablesLifecycleManager.Lib.Services;
 using AzureTablesLifecycleManager.TestResources;
 using AzureTablesLifecycleManager.TestResources.Setup;
@@ -134,6 +135,81 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 
 			// Clean up
 			_repo.DeleteTable(table);
+		}
+
+		[Fact]
+		public async Task ArchiveDataFromTablesAsync_SingleTableAndSampleDataToRemoveUsingODataFilter_SuccessfullyRemovesData()
+		{
+			// Arrange
+			var prefix = "RemoveUsingODataFilter";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var table = _repo.CreateTable(tableName);
+			int numOfEntriesThatWillBeRemoved = 34;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeRemoved);
+			_repo.AddTableEntities(tableName, seedData);
+			var dt = DateTime.UtcNow;
+			seedData = EntityFactory.GetVariedSeedData(53);
+			_repo.AddTableEntities(tableName, seedData);
+
+
+			var tableQueryBuilder =
+				new QueryBuilder().AppendCondition(ODataPredefinedFilters.TableNameExact(tableName));
+			var dataQueryBuilder =
+				new QueryBuilder().AppendCondition(ODataPredefinedFilters.TimestampLessThanOrEqual(dt));
+
+			// Act
+			var resp = await _sut.ArchiveDataFromTablesAsync<TableEntity>(
+				tableQueryBuilder,
+				dataQueryBuilder);
+
+			// Assert
+			foreach (var item in resp)
+			{
+				Assert.Equal(204, item.Status);
+			}
+			Assert.Equal(numOfEntriesThatWillBeRemoved, resp.Count);
+
+			// Clean up
+			_repo.DeleteTable(table);
+			var archiveTable = _repo
+				.GetTables(ODataPredefinedFilters.TableNameExact(TablePrefixes.ArchiveTablePrefix + tableName));
+			_repo.DeleteTable(archiveTable.First());
+		}
+
+		[Fact]
+		public async Task ArchiveDataFromTablesAsync_SingleTableAndSampleDataToRemoveUsingExpressionFilter_SuccessfullyRemovesData()
+		{
+			// Arrange
+			var prefix = "RemoveUsingExpressionFilter";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var table = _repo.CreateTable(tableName);
+			int numOfEntriesThatWillBeRemoved = 52;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeRemoved);
+			_repo.AddTableEntities(tableName, seedData);
+			var dt = DateTime.UtcNow;
+			seedData = EntityFactory.GetVariedSeedData(63);
+			_repo.AddTableEntities(tableName, seedData);
+
+			var tableQuery = ExpressionPredefinedFilters.HasPrefix(prefix);
+			Expression<Func<TableEntity, bool>> dataQuery = x => x.Timestamp.Value < dt;
+
+			// Act
+			var resp = await _sut.ArchiveDataFromTablesAsync<TableEntity>(
+				tableQuery,
+				dataQuery);
+
+			// Assert
+			foreach (var item in resp)
+			{
+				Assert.Equal(204, item.Status);
+			}
+			Assert.Equal(numOfEntriesThatWillBeRemoved, resp.Count);
+
+			// Clean up
+			_repo.DeleteTable(table);
+			var archiveTable = _repo
+				.GetTables(ODataPredefinedFilters.TableNameExact(TablePrefixes.ArchiveTablePrefix + tableName));
+			_repo.DeleteTable(archiveTable.First());
 		}
 	}
 }
