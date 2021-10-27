@@ -1,4 +1,5 @@
 ﻿using Azure.Data.Tables;
+using Azure.Data.Tables.Models;
 using AzureTablesLifecycleManager.AzureDAL.APIGateway;
 using AzureTablesLifecycleManager.AzureDAL.Models;
 using AzureTablesLifecycleManager.Lib.Models.Shared;
@@ -58,27 +59,32 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 			}
 
 			// Act
-			//var resp = await _sut.DeleteTablesAsync(ExpressionPredefinedFilters.HasPrefix(prefix));
+			var resp = await _sut.DeleteTablesAsync(ExpressionPredefinedFilters.HasPrefix(prefix));
 
 			// Assert
-			//foreach (var item in resp)
-			//{
-			//	Assert.Equal(204, item.Status);
-			//}
-			//Assert.Equal(10, resp.Count());
+			foreach (var item in resp)
+			{
+				Assert.Equal(204, item.Status);
+			}
+			Assert.Equal(10, resp.Count());
+
+			// Clean up
+			prefix = "TEST"; // rest of the tables
+			await _sut.DeleteTablesAsync(ExpressionPredefinedFilters.HasPrefix(prefix));
 		}
 
 		[Fact]
 		public async Task DeleteDataFromTablesAsync_SingleTableAndSampleDataToRemoveUsingODataFilter_SuccessfullyRemovesData()
 		{
 			// Arrange
-			var prefix = "RemoveUsingODataFilter";
+			var prefix = "RmvUsiODataFilt";
 			var tableName = EntityFactory.GenerateTableName(prefix);
 			var table = _repo.CreateTable(tableName);
 			int numOfEntriesThatWillBeRemoved = 34;
 			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeRemoved);
 			_repo.AddTableEntities(tableName, seedData);
 			var dt = DateTime.UtcNow;
+			await Task.Delay(5000);
 			seedData = EntityFactory.GetVariedSeedData(53);
 			_repo.AddTableEntities(tableName, seedData);
 
@@ -108,18 +114,19 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 		public async Task DeleteDataFromTablesAsync_SingleTableAndSampleDataToRemoveUsingExpressionFilter_SuccessfullyRemovesData()
 		{
 			// Arrange
-			var prefix = "RemoveUsingExpressionFilter";
+			var prefix = "RmvUsingExprFil";
 			var tableName = EntityFactory.GenerateTableName(prefix);
 			var table = _repo.CreateTable(tableName);
 			int numOfEntriesThatWillBeRemoved = 52;
 			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeRemoved);
 			_repo.AddTableEntities(tableName, seedData);
 			var dt = DateTime.UtcNow;
+			await Task.Delay(1000);
 			seedData = EntityFactory.GetVariedSeedData(63);
 			_repo.AddTableEntities(tableName, seedData);
 
-			var tableQuery = ExpressionPredefinedFilters.HasPrefix(prefix);
-			Expression<Func<TableEntity, bool>> dataQuery = x => x.Timestamp.Value < dt;
+			Expression<Func<TableItem, bool>> tableQuery = x => x.Name == tableName;
+			Expression<Func<TableEntity, bool>> dataQuery = x => x.Timestamp.Value <= dt;
 
 			// Act
 			var resp = await _sut.DeleteDataFromTablesAsync<TableEntity>(
@@ -141,13 +148,14 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 		public async Task ArchiveDataFromTablesAsync_SingleTableAndSampleDataToRemoveUsingODataFilter_SuccessfullyRemovesData()
 		{
 			// Arrange
-			var prefix = "RemoveUsingODataFilter";
+			var prefix = "RmvUsiODataFilt";
 			var tableName = EntityFactory.GenerateTableName(prefix);
 			var table = _repo.CreateTable(tableName);
 			int numOfEntriesThatWillBeRemoved = 34;
 			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeRemoved);
 			_repo.AddTableEntities(tableName, seedData);
 			var dt = DateTime.UtcNow;
+			await Task.Delay(1000);
 			seedData = EntityFactory.GetVariedSeedData(53);
 			_repo.AddTableEntities(tableName, seedData);
 
@@ -180,18 +188,19 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 		public async Task ArchiveDataFromTablesAsync_SingleTableAndSampleDataToRemoveUsingExpressionFilter_SuccessfullyRemovesData()
 		{
 			// Arrange
-			var prefix = "RemoveUsingExpressionFilter";
+			var prefix = "RmvUsingExprFil";
 			var tableName = EntityFactory.GenerateTableName(prefix);
 			var table = _repo.CreateTable(tableName);
 			int numOfEntriesThatWillBeRemoved = 52;
 			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeRemoved);
 			_repo.AddTableEntities(tableName, seedData);
 			var dt = DateTime.UtcNow;
+			await Task.Delay(1000);
 			seedData = EntityFactory.GetVariedSeedData(63);
 			_repo.AddTableEntities(tableName, seedData);
 
-			var tableQuery = ExpressionPredefinedFilters.HasPrefix(prefix);
-			Expression<Func<TableEntity, bool>> dataQuery = x => x.Timestamp.Value < dt;
+			Expression<Func<TableItem, bool>> tableQuery = x => x.Name == tableName;
+			Expression<Func<TableEntity, bool>> dataQuery = x => x.Timestamp.Value <= dt;
 
 			// Act
 			var resp = await _sut.ArchiveDataFromTablesAsync<TableEntity>(
