@@ -84,9 +84,10 @@ namespace AzureTablesLifecycleManager.Lib.Services
 			var tables = _tableRepo.GetTablesAsync(tableFilter);
 			await foreach (var table in tables)
 			{
-				var newTable = await _tableRepo.CreateTableAsync(TablePrefixes.ArchiveTablePrefix + table.Name);
+				var archiveTableName = TablePrefixes.ArchiveTablePrefix + table.Name;
+				await _tableRepo.CreateTableAsync(archiveTableName);
 				var dataToTransfer = _tableRepo.GetTableEntitiesAsync<T>(table.Name, dataFilter);
-				await _tableRepo.AddTableEntitiesAsync<T>(newTable.Value.Name, dataToTransfer);
+				await _tableRepo.AddTableEntitiesAsync<T>(archiveTableName, dataToTransfer);
 				var resps = await _tableRepo.DeleteTableEntitiesAsync<T>(table.Name, dataFilter);
 				responses.AddRange(resps);
 			}
@@ -101,9 +102,10 @@ namespace AzureTablesLifecycleManager.Lib.Services
 			var tables = _tableRepo.GetTablesAsync(tableFilter);
 			await foreach (var table in tables)
 			{
-				var newTable = await _tableRepo.CreateTableAsync(TablePrefixes.ArchiveTablePrefix + table.Name);
+				var archiveTableName = TablePrefixes.ArchiveTablePrefix + table.Name;
+				await _tableRepo.CreateTableAsync(archiveTableName);
 				var dataToTransfer = _tableRepo.GetTableEntitiesAsync<T>(table.Name, dataFilter);
-				await _tableRepo.AddTableEntitiesAsync<T>(newTable.Value.Name, dataToTransfer);
+				await _tableRepo.AddTableEntitiesAsync<T>(archiveTableName, dataToTransfer);
 				var resps = await _tableRepo.DeleteTableEntitiesAsync<T>(table.Name, dataFilter);
 				responses.AddRange(resps);
 			}

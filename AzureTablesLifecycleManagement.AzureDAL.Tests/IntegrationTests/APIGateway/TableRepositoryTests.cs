@@ -173,7 +173,7 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 		}
 
 		[Fact]
-		public void CreateTable_ValidNameGiven_TableClientGetsUpdated ()
+		public void CreateTable_ValidNameGiven_TableClientGetsUpdated()
 		{
 			// Arrange
 			string tableName = EntityFactory.GenerateTableName("TEST");
@@ -278,7 +278,6 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			var table = _sut.CreateTable(tableName);
 			var seedData = EntityFactory.GetVariedSeedData(27);
 
-
 			// Act
 			var resps = _sut.AddTableEntities<TableEntity>(tableName, seedData);
 
@@ -286,7 +285,7 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			// Assert
 			foreach (var item in resps)
 			{
-				Assert.Equal(204, item.Status); 
+				Assert.Equal(204, item.Status);
 			}
 
 			// Clean up
@@ -448,7 +447,7 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 
 			// Act
 			var result = _sut.GetTableEntities<TableEntity>
-				(tableName, 
+				(tableName,
 				x => x.RowKey == dummyEntity.RowKey)
 				.ToList();
 

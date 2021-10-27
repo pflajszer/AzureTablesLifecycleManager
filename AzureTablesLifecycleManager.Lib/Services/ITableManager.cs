@@ -14,5 +14,7 @@ namespace AzureTablesLifecycleManager.Lib.Services
 		Task<IList<Response>> DeleteTablesAsync(Expression<Func<TableItem, bool>> tableFilter);
 		Task<IList<Response>> DeleteDataFromTablesAsync<T>(IQueryBuilder tableQuery, IQueryBuilder dataQuery) where T : class, ITableEntity, new();
 		Task<IList<Response>> DeleteDataFromTablesAsync<T>(Expression<Func<TableItem, bool>> tableFilter, Expression<Func<T, bool>> dataFilter) where T : class, ITableEntity, new();
+		Task<IList<Response>> ArchiveDataFromTablesAsync<T>(IQueryBuilder tableQuery, IQueryBuilder dataQuery) where T : class, ITableEntity, new();
+		Task<IList<Response>> ArchiveDataFromTablesAsync<T>(Expression<Func<TableItem, bool>> tableFilter, Expression<Func<T, bool>> dataFilter) where T : class, ITableEntity, new();
 	}
 }

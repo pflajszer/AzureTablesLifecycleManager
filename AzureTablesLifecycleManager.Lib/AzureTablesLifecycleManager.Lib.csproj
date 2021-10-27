@@ -8,7 +8,7 @@
     <Description>Helper library for Lifecycle Management in Azure Tables</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/pflajszer/AzureTablesLifecycleManager</RepositoryUrl>
-    <Version>1.0.11</Version>
+    <Version>1.0.131</Version>
   </PropertyGroup>
 
   <ItemGroup>

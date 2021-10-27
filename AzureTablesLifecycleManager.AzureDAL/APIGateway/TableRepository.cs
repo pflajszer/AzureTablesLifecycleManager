@@ -50,7 +50,10 @@ namespace AzureTablesLifecycleManager.AzureDAL.APIGateway
 		{
 			var table =  _tableServiceClient.CreateTableIfNotExists(tableName);
 			var tableClient = _tableServiceClient.GetTableClient(tableName);
-			_tableClients.Add(tableClient);
+			if (!_tableClients.Any(x => x.Name == tableName))
+			{
+				_tableClients.Add(tableClient);
+			}
 			return table;
 		}
 
@@ -58,7 +61,10 @@ namespace AzureTablesLifecycleManager.AzureDAL.APIGateway
 		{
 			var table = await _tableServiceClient.CreateTableIfNotExistsAsync(tableName);
 			var tableClient = _tableServiceClient.GetTableClient(tableName);
-			_tableClients.Add(tableClient);
+			if (!_tableClients.Any(x => x.Name == tableName))
+			{
+				_tableClients.Add(tableClient); 
+			}
 			return table;
 		}
 
