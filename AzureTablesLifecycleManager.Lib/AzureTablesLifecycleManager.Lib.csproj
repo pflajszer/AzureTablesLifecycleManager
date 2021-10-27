@@ -8,6 +8,7 @@
     <Description>Helper library for Lifecycle Management in Azure Tables</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/pflajszer/AzureTablesLifecycleManager</RepositoryUrl>
+    <Version>1.0.11</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +16,10 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
