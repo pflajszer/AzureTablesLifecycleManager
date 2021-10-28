@@ -2,6 +2,10 @@
 # AzureTablesLifecycleManager
 Helper library to manage the lifecycle of Azure Table tables and entities
 
+## A Word of warning
+
+Misusing this library can have some serious consequences - Please play around with it using a Storage Emulator or `Azurite` (recommended) before connecting to prod. If you connect to your live storage account, this library has the power to wipe all data from it if used incorrectly. In example - providing two empty filters will return all the tables and all data within them, if you then invoke the delete method... you know what will happen ;-)
+
 ## Installation
 
 #### Package Manager:
@@ -11,19 +15,22 @@ Helper library to manage the lifecycle of Azure Table tables and entities
 
 ## Setup
 
-When using dependency injection in .NET Core 3.X, you can register type like so, by registering a type in the ```ConfigureServices()``` method. Outside of the DI registration, the `OpenWeatherMapAPIClientConfiguration.APIKey` is required, and the rest of the config is optional and has default values:
+When using dependency injection in .NET Core 3.X, you can register type like so, by registering a type in the ```ConfigureServices()``` method. To use the below extension method, you need to have an evironment variable called `AzureWebJobsStorage` with your Azure Storage Connection String as a value and ability to inject `IConfiguration`.
 
 Startup.cs:
 ```csharp
-public void ConfigureServices(IServiceCollection services)
-{
-	OpenWeatherMapAPIClientConfiguration.APIKey = "MY_API_KEY"
-	OpenWeatherMapAPIClientConfiguration.APIURL = "API_URL_TO_USE" // OPTIONAL
-	OpenWeatherMapAPIClientConfiguration.APIVersion = "API_VERSION_TO_USE" // OPTIONAL
+	public override void Configure(IFunctionsHostBuilder builder)
+	{
+		builder.RegisterAzureTablesLifecycleManagement();
+	}
+```
 
-
-	services.AddScoped<IOpenWeatherMapAPIClient, OpenWeatherMapAPIClient>();
-}
+Alternatively you can just call the below to register your services:
+```csharp
+	builder.Services.AddSingleton(p => new TableServiceClient(p.GetService<IConfiguration>()["AzureWebJobsStorage"]));
+	builder.Services.AddSingleton<ITableRepository, TableRepository>();
+	builder.Services.AddSingleton<ITableManager, TableManager>();
+	builder.Services.AddSingleton<IQueryBuilder, QueryBuilder>();
 ```
 
 MyClass.cs:
@@ -31,52 +38,108 @@ MyClass.cs:
 ```csharp
 public class MyClass
 {
-	private readonly IOpenWeatherMapAPIClient _api;
+	private readonly ITableManager _api;
+	private readonly IQueryBuilder _queryBuilder;
 
-	public MyService(IOpenWeatherMapAPIClient api)
+	public MyService(IOpenWeatherMapAPIClient api, IQueryBuilder _queryBuilder)
 	{
 		_api = api;
+		_queryBuilder = queryBuilder;
 	}
 }
 ```
 
-Alternatively, you don't have to inject/instantiate the whole API client and only choose services that you need, by injecting i.e. `ICurrentWeatherDataService`.
-
-You can control which version of OpenWeatherMap API you're using by providing an optional `OpenWeatherMapAPIClientConfiguration.APIVersion` parameter to your global `Startup` config and using `OpenWeatherMapAPI.Models.Shared.Constants` class (i.e. `Constants.Ver2_5`), or provide the version yourself. You can do the same with the API URL by providing a `OpenWeatherMapAPIClientConfiguration.APIVersion` in your config. Similarly, this is optional as the default value is provided automatically.
-
 ## Usage
 
-The example project that uses the below code can be found under `OpenWeatherMapAPI.SystemTests`. Feel free to clone and play around!
+The library allows you to manage your tables using a LINQ expressions, or OData filters. While LINQ is widely known, OData - not so much. For this reason, the OData filtering is hidden behind an IQueryBuilder
 
-Quickstart:
+
+The sample project can be found under `AzureTablesLifecycleManager.SystemTests` (Azure Functions app). Feel free to clone and play around!
+
+
+Query tables using LINQ Expression:
 
 ```csharp
-OpenWeatherMapAPIClientConfiguration.APIKey = "MY_API_KEY"
-var apiClient = new OpenWeatherMapAPIClient();
-var currentWeather = apiClient.CurrentWeatherData;
+	public async Task ArchiveEverythingThatsOlderThanAYear()
+	{
+		try
+		{
+			// this query will return all the tables:
+			Expression<Func<TableItem, bool>> tableQuery = x => true;
+			
+			// this query will return all data in the above tables that matches the condition (all data older than 1 year ago)
+			Expression<Func<ProductEntity, bool>> dataQuery = x => x.Timestamp < DateTime.Now.AddYears(-1);
 
-var request = new ByGeographicCoordinatesRequest()
-{
-	Latitude = 53.7998,
-	Longitude = 1.5584
-};
+			// this call will delete the data that match the above filters:
+			var dataDeletedResponse = await _api.DeleteDataFromTablesAsync<ProductEntity>(tableQuery, dataQuery);
+			
+			// the alternative to the above would be Archiving the tables first. 
+			// It's nothing fancy, but it will duplicate the table and add ARCHIVE prefix to its name
+			// which, at least for the initial period of using the library allows you to see what data would you delete:
+			var dataArchivedResponse = await _api.ArchiveDataFromTablesAsync<ProductEntity>(tableQuery, dataQuery);
+		}
+		catch (Exception ex)
+		{
 
-var result = await currentWeather.ByGeographicCoordinatesAsync(request);
+			throw;
+		}
+	}
 
-// {"coord":{"lon":1.5584,"lat":53.7998},"weather":[{"id":804,"main":"Clouds","description":"overcast clouds","icon":"04d"}],"base":"stations","main":{"temp":286.48,"feels_like":286.11,"temp_min":286.48,"temp_max":286.48,"pressure":1015,"humidity":86},"visibility":10000,"wind":{"speed":9.68,"deg":180},"clouds":{"all":100},"dt":1634563421,"sys":{"type":2,"id":2029944,"country":"GB","sunrise":1634538410,"sunset":1634575838},"timezone":0,"id":2650519,"name":"Easington","cod":200}
+```
 
+Query tables using `IQueryBuilder` (OData filters under the surface)
+
+```csharp
+	public async Task<IActionResult> ArchiveEverythingThatsOlderThanAYear()
+	{
+		try
+		{
+			// this will return all the tables since it's an empty query:
+			var tableQuery =
+				new QueryBuilder();
+
+			// this will return all the data older than 1 year ago:
+			var dataQuery =
+				new QueryBuilder()
+					.AppendCondition(ODataPredefinedFilters.TimestampLessThanOrEqual(DateTime.Now.AddYears(-1)));
+
+			
+			// this will archive all the data that match the above filters:
+			var dataArchiveResponse = await _api.ArchiveDataFromTablesAsync<ProductEntity>(tableQuery, dataQuery);
+
+			// or delete it permanently:
+			var dataDeleteResponse = await _api.ArchiveDataFromTablesAsync<ProductEntity>(tableQuery, dataQuery);
+
+
+			return new OkResult();
+		}
+		catch (Exception ex)
+		{
+			throw;
+		}
+	}
 ```
 ## Testing
 
-Some Integration and System tests are available in the repo, but make sure you update the `OpenWeatherMapAPI.TestResources.BaseConstants.APIkey` constant.
+Some Integration and System tests are available in the repo.
+You can control which Azure Storage account is used for the tests by changing the value of `AzureTablesLifecycleManager.TestResources.ConfigConstants.ConnectionString` constant. 
+By default, it's using a local account (Emulator/Azurite) and I'd suggest leaving it that way. Running the tests inserts and delete some data, so please be careful with it.
 
 
 ## Development
 
-In order to add a new service to the library, you'll need to:
-- Add a new endpoint constant in `OpenWeatherMapAPI.Models.Shared.Constants`
-- Add a new folder under `OpenWeatherMapAPI.Models` with your new service name. In that folder, add a POCO response class
-- For each method you're adding, also add a request class in the above namespace (if not existing yet)
-- Add a folder under `OpenWeatherMapAPI.Services` with the new service you're adding and add a concrete class and an abstract interface. Derive your class from `APIGateway` class. Don't call the API yourself - use your service to construct the request object you need to pass on and use the `ExecuteGetAsync<T>` method to do the calling for you
-- Add your new interface to the `OpenWeatherMapAPIClient` and `IOpenWeatherMapAPIClient` as a property
-- Following the existing structure, add any sample requests/responses to `OpenWeatherMapAPI.TestResources` project, add integration tests in `OpenWeatherMapAPI.IntegrationTests` project and a logic for system tests in `OpenWeatherMapAPI.SystemTests`
+N/A
+
+## Deployment
+
+
+Use tags for versioning. Check the current iteration (tag) and in cmd:
+
+```git
+git checkout [test/master]
+git pull
+git tag v[Major].[Minor].[Patch]-[beta if test branch]
+git push origin [version]
+```
+
+Then, push the code to test and merge into master.
