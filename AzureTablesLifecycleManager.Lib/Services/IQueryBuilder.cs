@@ -13,5 +13,6 @@ namespace AzureTablesLifecycleManager.Lib.Services
 		public IQueryBuilder Or();
 		public IQueryBuilder Not();
 		public string Build();
+		void Flush();
 	}
 }

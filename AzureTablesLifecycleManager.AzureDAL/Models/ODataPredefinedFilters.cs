@@ -13,6 +13,6 @@ namespace AzureTablesLifecycleManager.AzureDAL.Models
 		public static Func<DateTime, string> TimestampGreaterThanOrEqual => (timestamp) => $"{TableEntityFields.Timestamp} {ODataComparisonOperators.GreaterThanOrEqual} '{timestamp.ToString("o")}'";
 		public static Func<DateTime, string> TimestampLessThan => (timestamp) => $"{TableEntityFields.Timestamp} {ODataComparisonOperators.LessThan} '{timestamp.ToString("o")}'";
 		public static Func<DateTime, string> TimestampLessThanOrEqual => (timestamp) => $"{TableEntityFields.Timestamp} {ODataComparisonOperators.LessThanOrEqual} '{timestamp.ToString("o")}'";
-		public static Func<string, string, string, string> Custom => (tableEntityField, comparisonOperator, value) => $"{tableEntityField} {comparisonOperator} '{value}'";
+		public static Func<(string TableEntityField, string ComparisonOperator, string Value), string> Custom => (data) => $"{data.TableEntityField} {data.ComparisonOperator} '{data.Value}'";
 	}
 }

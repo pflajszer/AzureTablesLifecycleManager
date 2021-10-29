@@ -1,12 +1,11 @@
-﻿using Azure;
-using Azure.Data.Tables;
+﻿using Azure.Data.Tables;
 using Azure.Data.Tables.Models;
 using AzureTablesLifecycleManager.AzureDAL.APIGateway;
 using AzureTablesLifecycleManager.AzureDAL.Models;
+using AzureTablesLifecycleManager.Lib.Extensions;
 using AzureTablesLifecycleManager.TestResources;
 using AzureTablesLifecycleManager.TestResources.Setup;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -90,13 +89,12 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			// Arrange
 			var tableName = EntityFactory.GenerateTableName("TEST");
 			var dummyTable = _sut.CreateTable(tableName);
-			var resultList = new List<TableItem>();
 
 
 			// Act
 			var result = _sut.GetTablesAsync();
 
-			await EnumerateAsyncPageable(resultList, result).ConfigureAwait(false);
+			var resultList = await result.EnumerateAsyncPageable().ConfigureAwait(false);
 
 			// Assert
 			Assert.True(resultList.Count > 0);
@@ -112,14 +110,13 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			// Arrange
 			var tableName = EntityFactory.GenerateTableName("TEST");
 			var table = _sut.CreateTable(tableName);
-			var resultList = new List<TableItem>();
 			Expression<Func<TableItem, bool>> filter = x => x.Name == tableName;
 
 			// Act
 			var result = _sut.GetTablesAsync(
 				filter);
 
-			await EnumerateAsyncPageable(resultList, result);
+			var resultList = await result.EnumerateAsyncPageable().ConfigureAwait(false);
 
 			// Assert
 			Assert.Equal(tableName, resultList.Single().Name);
@@ -134,14 +131,13 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			// Arrange
 			var tableName = EntityFactory.GenerateTableName("TEST");
 			var table = _sut.CreateTable(tableName);
-			var resultList = new List<TableItem>();
 			var filter = ODataPredefinedFilters.TableNameExact(tableName);
 
 			// Act
 			var result = _sut.GetTablesAsync(
 				filter);
 
-			await EnumerateAsyncPageable(resultList, result);
+			var resultList = await result.EnumerateAsyncPageable().ConfigureAwait(false);
 
 			// Assert
 			Assert.Equal(tableName, resultList.Single().Name);
@@ -411,7 +407,6 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			// Arrange
 			var tableName = EntityFactory.GenerateTableName("TEST");
 			var table = _sut.CreateTable(tableName);
-			var resultList = new List<TableEntity>();
 			var seedData = EntityFactory.GetVariedSeedData(10);
 			var resps = _sut.AddTableEntities<TableEntity>(tableName, seedData);
 
@@ -419,7 +414,7 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			// Act
 			var result = _sut.GetTableEntitiesAsync<TableEntity>(tableName);
 
-			await EnumerateAsyncPageable(resultList, result);
+			var resultList = await result.EnumerateAsyncPageable().ConfigureAwait(false);
 
 			// Assert
 			Assert.NotEmpty(resultList);
@@ -465,7 +460,6 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			// Arrange
 			var tableName = EntityFactory.GenerateTableName("TEST");
 			var table = _sut.CreateTable(tableName);
-			var resultList = new List<TableEntity>();
 			var dummyEntity = new TableEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString())
 			{
 				{ "Product", "Other product" },
@@ -482,7 +476,7 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 				(tableName,
 				x => x.RowKey == dummyEntity.RowKey);
 
-			await EnumerateAsyncPageable(resultList, result);
+			var resultList = await result.EnumerateAsyncPageable().ConfigureAwait(false);
 
 			// Assert
 			Assert.NotEmpty(resultList);
@@ -530,8 +524,6 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 			// Arrange
 			var tableName = EntityFactory.GenerateTableName("TEST");
 			var table = _sut.CreateTable(tableName);
-			var resultList = new List<TableEntity>();
-
 			var dummyEntity = new TableEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString())
 			{
 				{ "Product", "Other product" },
@@ -549,7 +541,7 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 				(tableName,
 				filter);
 
-			await EnumerateAsyncPageable(resultList, result);
+			var resultList = await result.EnumerateAsyncPageable().ConfigureAwait(false);
 
 			// Assert
 			Assert.NotEmpty(resultList);
@@ -557,21 +549,6 @@ namespace AzureTablesLifecycleManagement.AzureDAL.Tests.IntegrationTests.APIGate
 
 			// Clean up
 			_sut.DeleteTable(table);
-		}
-
-		private static async Task EnumerateAsyncPageable<T>(List<T> resultList, AsyncPageable<T> result)
-		{
-			await foreach (var page in result.AsPages())
-			{
-				// enumerate through page items
-				foreach (var v in page.Values)
-				{
-					resultList.Add(v);
-				}
-
-				// get continuation token that can be used in AsPages call to resume enumeration
-				Console.WriteLine(page.ContinuationToken);
-			}
 		}
 	}
 }

@@ -61,6 +61,11 @@ namespace AzureTablesLifecycleManager.Lib.Services
 			return _sb.ToString();
 		}
 
+		public void Flush()
+		{
+			_sb.Clear();
+		}
+
 		private void AddWhitespaceIfNecessary()
 		{
 			if (_sb.Length != 0 && _sb.ToString().Last() != '(')
