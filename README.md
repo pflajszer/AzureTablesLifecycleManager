@@ -6,6 +6,25 @@ Helper library to manage the lifecycle of Azure Table tables and entities
 
 Misusing this library can have some serious consequences - Please play around with it using a Storage Emulator or `Azurite` (recommended) before connecting to prod. If you connect to your live storage account, this library has the power to wipe all data from it if used incorrectly. In example - providing two empty filters will return all the tables and all data within them, if you then invoke the delete method... you know what will happen ;-)
 
+## Business problem
+
+If you have used Azure Storage for some time, you might have learned about `Azure Lifecycle Management` provided by Azure for the hosted resources. Unfortunately, but probably by design, there is no way of controlling a lifecycling of your Azure Tables. While we should be extremely careful deleting data from a database, Azure Tables costs can pile up pretty quickly with audit trails and logs, but also some temp data that we leave there "for later" and never come back to it.
+I decided to tackle that problem and implemented Azure Tables Lifecycle Manager.
+
+## Capabilities
+
+Currently, `ITableManager` supports the following functionalities:
+
+| Feature | Description | Methods |
+|---------|-------------|---------|
+| Move data between tables | This allows to **move** existing data from one or mutliple tables that match a provided query to a new or existing table | `MoveDataBetweenTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
+| Copy data between tables | This allows to **copy** existing data from one or mutliple tables that match a provided query to a new or existing table | `CopyDataFromTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
+| Delete data from tables | Delete data from one/mulitple tables matching given filters | `DeleteDataFromTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
+| Delete tables | Delete one/mulitple tables matching given filters | `DeleteTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
+| Fetch data from tables | Fetch data from one/mulitple tables matching given filters | `GetDataFromTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
+
+
+
 ## Installation
 
 #### Package Manager:
