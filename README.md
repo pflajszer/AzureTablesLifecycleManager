@@ -19,18 +19,18 @@ When using dependency injection in .NET Core 3.X, you can register type like so,
 
 Startup.cs:
 ```csharp
-	public override void Configure(IFunctionsHostBuilder builder)
-	{
-		builder.RegisterAzureTablesLifecycleManagement();
-	}
+public override void Configure(IFunctionsHostBuilder builder)
+{
+	builder.RegisterAzureTablesLifecycleManagement();
+}
 ```
 
 Alternatively you can just call the below to register your services:
 ```csharp
-	builder.Services.AddSingleton(p => new TableServiceClient(p.GetService<IConfiguration>()["AzureWebJobsStorage"]));
-	builder.Services.AddSingleton<ITableRepository, TableRepository>();
-	builder.Services.AddSingleton<ITableManager, TableManager>();
-	builder.Services.AddSingleton<IQueryBuilder, QueryBuilder>();
+builder.Services.AddSingleton(p => new TableServiceClient(p.GetService<IConfiguration>()["AzureWebJobsStorage"]));
+builder.Services.AddSingleton<ITableRepository, TableRepository>();
+builder.Services.AddSingleton<ITableManager, TableManager>();
+builder.Services.AddSingleton<IQueryBuilder, QueryBuilder>();
 ```
 
 MyClass.cs:
@@ -63,78 +63,78 @@ The sample project can be found under `AzureTablesLifecycleManager.SystemTests` 
 #### Query tables using LINQ Expression:
 
 ```csharp
-	public async Task<DataTransferResponse<T>> DoSomethingWithDataOlderThanAYearUsingLINQExpression<T>(int option) where T : class, ITableEntity, new()
+public async Task<DataTransferResponse<T>> DoSomethingWithDataOlderThanAYearUsingLINQExpression<T>(int option) where T : class, ITableEntity, new()
+{
+	// this query will return all the tables:
+	Expression<Func<TableItem, bool>> tableQuery = x => true;
+
+	// this query will return all data in the above tables that matches the condition (all data older than 1 year ago)
+	Expression<Func<T, bool>> dataQuery = x => x.Timestamp < DateTime.Now.AddYears(-1);
+
+	var dtr = new DataTransferResponse<T>();
+
+	switch (option)
 	{
-		// this query will return all the tables:
-		Expression<Func<TableItem, bool>> tableQuery = x => true;
-
-		// this query will return all data in the above tables that matches the condition (all data older than 1 year ago)
-		Expression<Func<T, bool>> dataQuery = x => x.Timestamp < DateTime.Now.AddYears(-1);
-
-		var dtr = new DataTransferResponse<T>();
-
-		switch (option)
-		{
-			case 1:
-				// Moving the data to a new table:
-				var newTableName = "newTableName";
-				newTableName.EnsureValidAzureTableName();
-				dtr = await _api.MoveDataBetweenTablesAsync<T>(tableQuery, dataQuery, newTableName);
-				break;
-			case 2:
-				// this call will delete the data that match the above filters:
-				dtr = await _api.DeleteDataFromTablesAsync<T>(tableQuery, dataQuery);
-				break;
-			case 3:
-				// ...or just fetch the data:
-				dtr = await _api.GetDataFromTablesAsync<T>(tableQuery, dataQuery);
-				break;
-			default:
-				break;
-		}
-
-		return dtr;
+		case 1:
+			// Moving the data to a new table:
+			var newTableName = "newTableName";
+			newTableName.EnsureValidAzureTableName();
+			dtr = await _api.MoveDataBetweenTablesAsync<T>(tableQuery, dataQuery, newTableName);
+			break;
+		case 2:
+			// this call will delete the data that match the above filters:
+			dtr = await _api.DeleteDataFromTablesAsync<T>(tableQuery, dataQuery);
+			break;
+		case 3:
+			// ...or just fetch the data:
+			dtr = await _api.GetDataFromTablesAsync<T>(tableQuery, dataQuery);
+			break;
+		default:
+			break;
 	}
+
+	return dtr;
+}
 ```
 
 #### Query tables using `IQueryBuilder` (OData filters under the surface)
 
 ```csharp
-		public async Task<DataTransferResponse<T>> DoSomethingWithDataOlderThanAYearUsingQueryBuilder<T>(int option) where T : class, ITableEntity, new()
-		{
-			// this will return all the tables since it's an empty query:
-			var tableQuery =
-				new QueryBuilder();
+public async Task<DataTransferResponse<T>> DoSomethingWithDataOlderThanAYearUsingQueryBuilder<T>(int option) where T : class, ITableEntity, new()
+{
+	// this will return all the tables since it's an empty query:
+	var tableQuery =
+		new QueryBuilder();
 
-			// this will return all the data older than 1 year ago:
-			var dataQuery =
-				new QueryBuilder()
-					.AppendCondition(ODataPredefinedFilters.TimestampLessThanOrEqual(DateTime.Now.AddYears(-1)));
+	// this will return all the data older than 1 year ago:
+	var dataQuery =
+		new QueryBuilder()
+			.AppendCondition(ODataPredefinedFilters.TimestampLessThanOrEqual(DateTime.Now.AddYears(-1)));
 
-			var dtr = new DataTransferResponse<T>();
+	var dtr = new DataTransferResponse<T>();
 
-			switch (option)
-			{
-				case 1:
-					// this will move all the data that match the above filters to a new table:
-					var newTableName = "someNewTable";
-					newTableName.EnsureValidAzureTableName();
-					dtr = await _api.MoveDataBetweenTablesAsync<T>(tableQuery, dataQuery, newTableName);
-					break;
-				case 2:
-					// ...or delete it permanently:
-					dtr = await _api.DeleteDataFromTablesAsync<T>(tableQuery, dataQuery);
-					break;
-				case 3:
-					// ...or just fetch the data:
-					dtr = await _api.GetDataFromTablesAsync<T>(tableQuery, dataQuery);
-					break;
-				default:
-					break;
-			}
+	switch (option)
+	{
+		case 1:
+			// this will move all the data that match the above filters to a new table:
+			var newTableName = "someNewTable";
+			newTableName.EnsureValidAzureTableName();
+			dtr = await _api.MoveDataBetweenTablesAsync<T>(tableQuery, dataQuery, newTableName);
+			break;
+		case 2:
+			// ...or delete it permanently:
+			dtr = await _api.DeleteDataFromTablesAsync<T>(tableQuery, dataQuery);
+			break;
+		case 3:
+			// ...or just fetch the data:
+			dtr = await _api.GetDataFromTablesAsync<T>(tableQuery, dataQuery);
+			break;
+		default:
+			break;
+	}
 
-			return dtr;
-		}
+	return dtr;
+}
 ```
 
 For a runnable example, run the `AzureTablesLifecycleManager.SystemTests` project. Be careful with the connection string you provide!
@@ -144,43 +144,40 @@ For a runnable example, run the `AzureTablesLifecycleManager.SystemTests` projec
 If using LINQ expressions is not enough (while they're powerful, some of them aren't supported by Azure yet), then `IQueryBuilder` is worth looking into. It's a helper class using a builder pattern with fluent syntax. Under the hood, it builds OData queries.
 
 ```csharp
+var rowKey = new Guid("512ef724-17dc-44a9-8e32-93fc212dbb4a").ToString();
+var partitionKey = new Guid("f1142899-b6e4-4e0a-aecb-58fdc23df10f").ToString();
+var date1 = DateTime.Parse("2021-10-21T20:42:03.2034035+01:00");
+var date2 = DateTime.Parse("2021-10-24T20:42:03.2039446+01:00");
 
-		
-		var rowKey = new Guid("512ef724-17dc-44a9-8e32-93fc212dbb4a").ToString();
-		var partitionKey = new Guid("f1142899-b6e4-4e0a-aecb-58fdc23df10f").ToString();
-		var date1 = DateTime.Parse("2021-10-21T20:42:03.2034035+01:00");
-		var date2 = DateTime.Parse("2021-10-24T20:42:03.2039446+01:00");
+// some predefined queries already exist in ODataPredefinedFilters class:
+string condition1 = ODataPredefinedFilters.RowKeyExact(rowKey);
+string condition2 = ODataPredefinedFilters.PartitionKeyExact(partitionKey);
+string condition3 = ODataPredefinedFilters.TimestampGreaterThan(date1);
+string condition4 = ODataPredefinedFilters.TimestampLessThan(date2);
 
-		// some predefined queries already exist in ODataPredefinedFilters class:
-		string condition1 = ODataPredefinedFilters.RowKeyExact(rowKey);
-		string condition2 = ODataPredefinedFilters.PartitionKeyExact(partitionKey);
-		string condition3 = ODataPredefinedFilters.TimestampGreaterThan(date1);
-		string condition4 = ODataPredefinedFilters.TimestampLessThan(date2);
+// you can also write your custom logic with help of the Custom query method, ODataComparisonOperators and TableEntityFields (or your own name of entity) classes like so:
+string condition5 = ODataPredefinedFilters.Custom(("MyTableEntityField", ODataComparisonOperators.GreaterThanOrEqual, "SomeRowValue"));
+// or
+string condition6 = ODataPredefinedFilters.Custom((TableEntityFields.ETag, ODataComparisonOperators.Equals, "SomeETagValue"));
 
-		// you can also write your custom logic with help of the Custom query method, ODataComparisonOperators and TableEntityFields (or your own name of entity) classes like so:
-		string condition5 = ODataPredefinedFilters.Custom(("MyTableEntityField", ODataComparisonOperators.GreaterThanOrEqual, "SomeRowValue"));
-		// or
-		string condition6 = ODataPredefinedFilters.Custom((TableEntityFields.ETag, ODataComparisonOperators.Equals, "SomeETagValue"));
+// Act
+var queryBuilder = new QueryBuilder();
+var result = queryBuilder
+	.AppendCondition(condition1)
+	.And()
+	.StartSubCondition()
+		.AppendCondition(condition2)
+		.Or()
+		.AppendCondition(condition3)
+	.EndSubCondition()
+	.And()
+	.AppendCondition(condition4)
+	.And()
+	.AppendCondition(condition5)
+	.Build();
 
-		// Act
-		var queryBuilder = new QueryBuilder();
-		var result = queryBuilder
-			.AppendCondition(condition1)
-			.And()
-			.StartSubCondition()
-				.AppendCondition(condition2)
-				.Or()
-				.AppendCondition(condition3)
-			.EndSubCondition()
-			.And()
-			.AppendCondition(condition4)
-			.And()
-			.AppendCondition(condition5)
-			.Build();
-
-		// result: 
-		// "RowKey eq '512ef724-17dc-44a9-8e32-93fc212dbb4a' and (PartitionKey eq 'f1142899-b6e4-4e0a-aecb-58fdc23df10f' or Timestamp gt '2021-10-21T20:42:03.2034035+01:00') and Timestamp lt '2021-10-24T20:42:03.2039446+01:00' and MyTableEntityField ge 'SomeRowValue' and ETag eq 'SomeRowValue'"
-
+// result: 
+// "RowKey eq '512ef724-17dc-44a9-8e32-93fc212dbb4a' and (PartitionKey eq 'f1142899-b6e4-4e0a-aecb-58fdc23df10f' or Timestamp gt '2021-10-21T20:42:03.2034035+01:00') and Timestamp lt '2021-10-24T20:42:03.2039446+01:00' and MyTableEntityField ge 'SomeRowValue' and ETag eq 'SomeRowValue'"
 ```
 
 Note: The `Build()` method allows you to check the output of the query building, but you normally pass the instance of `IQueryBuilder` to `ITableManager` methods without building it.
@@ -188,16 +185,16 @@ Note: The `Build()` method allows you to check the output of the query building,
 If you're re-using `IQueryBuilder`, i.e. you're using Dependency Injection, you can use the `Flush()` method like so to reset the builder:
 
 ```csharp
-		var queryBuilder = new QueryBuilder();
-		var query = queryBuilder
-			.AppendCondition(firstCondition)
-			.Build();
+var queryBuilder = new QueryBuilder();
+var query = queryBuilder
+	.AppendCondition(firstCondition)
+	.Build();
 
-		queryBuilder.Flush();
+queryBuilder.Flush();
 
-		var anotherQuery = queryBuilder
-			.AppendCondition(someOtherCondition)
-			.Build();
+var anotherQuery = queryBuilder
+	.AppendCondition(someOtherCondition)
+	.Build();
 ```
 
 ### Extensions
