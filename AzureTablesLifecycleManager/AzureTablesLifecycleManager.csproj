@@ -3,7 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>3.0.1</Version>
+    <Version>1.0.0</Version>
+    <Authors>Pawel Flajszer</Authors>
+    <Description>Helper library to manage the lifecycle of Azure Table tables and entities written in .NET Core 3.1</Description>
+    <RepositoryUrl>https://github.com/pflajszer/AzureTablesLifecycleManager</RepositoryUrl>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
