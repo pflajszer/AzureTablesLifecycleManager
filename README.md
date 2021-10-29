@@ -2,7 +2,7 @@
 # AzureTablesLifecycleManager
 Helper library to manage the lifecycle of Azure Table tables and entities
 
-## A Word of warning
+## A word of warning
 
 Misusing this library can have some serious consequences - Please play around with it using a Storage Emulator or `Azurite` (recommended) before connecting to prod. If you connect to your live storage account, this library has the power to wipe all data from it if used incorrectly. In example - providing two empty filters will return all the tables and all data within them, if you then invoke the delete method... you know what will happen ;-)
 
