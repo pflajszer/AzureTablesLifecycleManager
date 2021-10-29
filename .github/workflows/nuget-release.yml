@@ -1,0 +1,34 @@
+name: Dotnet Build, Pack and NuGet Push
+
+env:
+  PROJECT_PATH: 'AzureTablesLifecycleManager/AzureTablesLifecycleManager.csproj'
+  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/output
+  NUGET_SOURCE_URL: 'https://api.nuget.org/v3/index.json'
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Output the branch name
+      run: echo $(echo $GITHUB_REF | cut -d'/' -f 3)
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.PROJECT_PATH }}
+    - name: Build
+      run: dotnet build ${{ env.PROJECT_PATH }} --no-restore --configuration Release
+    - name: 'Get Version'
+      id: version
+      uses: battila7/get-version-action@v2
+    - name: Pack
+      run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore --no-build --configuration Release  --include-symbols -p:PackageVersion=${{ steps.version.outputs.version-without-v }} --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
+    - name: Nuget Push
+      run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg -s ${{ env.NUGET_SOURCE_URL }} -k ${{secrets.NUGET_API_KEY}} --skip-duplicate
