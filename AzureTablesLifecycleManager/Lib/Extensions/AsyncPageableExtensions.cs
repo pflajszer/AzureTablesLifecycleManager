@@ -15,7 +15,7 @@ namespace AzureTablesLifecycleManager.Lib.Extensions
 		/// <typeparam name="T"></typeparam>
 		/// <param name="result"></param>
 		/// <returns></returns>
-		public static async Task<IList<T>> EnumerateAsyncPageable<T>(this AsyncPageable<T> result)
+		public static async Task<List<T>> EnumerateAsyncPageable<T>(this AsyncPageable<T> result)
 		{
 			var res = new List<T>();
 			await foreach (var page in result.AsPages())

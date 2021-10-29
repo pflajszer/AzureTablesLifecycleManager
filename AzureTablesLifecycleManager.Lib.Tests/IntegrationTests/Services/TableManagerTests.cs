@@ -1,9 +1,9 @@
 ﻿using Azure.Data.Tables;
 using Azure.Data.Tables.Models;
 using AzureTablesLifecycleManager.AzureDAL.APIGateway;
-using AzureTablesLifecycleManager.AzureDAL.Models;
-using AzureTablesLifecycleManager.Lib.Models.Shared;
+using AzureTablesLifecycleManager.Lib.Extensions;
 using AzureTablesLifecycleManager.Lib.Services;
+using AzureTablesLifecycleManager.Models;
 using AzureTablesLifecycleManager.TestResources;
 using AzureTablesLifecycleManager.TestResources.Setup;
 using System;
@@ -37,10 +37,7 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 			var resp = await _sut.DeleteTablesAsync((QueryBuilder)null);
 
 			// Assert
-			foreach (var item in resp)
-			{
-				Assert.Equal(204, item.Status);
-			}
+			Assert.True(resp.AreOKResponses());
 		}
 
 		[Fact]
@@ -62,11 +59,8 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 			var resp = await _sut.DeleteTablesAsync(ExpressionPredefinedFilters.HasPrefix(prefix));
 
 			// Assert
-			foreach (var item in resp)
-			{
-				Assert.Equal(204, item.Status);
-			}
-			Assert.Equal(10, resp.Count());
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(10, resp.TableDeletedResponses.Count);
 
 			// Clean up
 			prefix = "TEST"; // rest of the tables
@@ -100,11 +94,8 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 				dataQueryBuilder);
 
 			// Assert
-			foreach (var item in resp)
-			{
-				Assert.Equal(204, item.Status);
-			}
-			Assert.Equal(numOfEntriesThatWillBeRemoved, resp.Count);
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(numOfEntriesThatWillBeRemoved, resp.DataDeletedResponses.Count);
 
 			// Clean up
 			_repo.DeleteTable(table);
@@ -134,25 +125,23 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 				dataQuery);
 
 			// Assert
-			foreach (var item in resp)
-			{
-				Assert.Equal(204, item.Status);
-			}
-			Assert.Equal(numOfEntriesThatWillBeRemoved, resp.Count);
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(numOfEntriesThatWillBeRemoved, resp.DataDeletedResponses.Count);
 
 			// Clean up
 			_repo.DeleteTable(table);
 		}
 
 		[Fact]
-		public async Task ArchiveDataFromTablesAsync_SingleTableAndSampleDataToRemoveUsingODataFilter_SuccessfullyRemovesData()
+		public async Task MoveDataBetweenTablesAsync_SingleTableAndSampleDataToTransferUsingODataFilter_SuccessfullyMoveData()
 		{
 			// Arrange
-			var prefix = "RmvUsiODataFilt";
+			var prefix = "MoveUsiODataFilt";
 			var tableName = EntityFactory.GenerateTableName(prefix);
+			var newTableName = EntityFactory.GenerateTableName(prefix);
 			var table = _repo.CreateTable(tableName);
-			int numOfEntriesThatWillBeRemoved = 34;
-			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeRemoved);
+			int numOfEntriesThatWillBeTransferred = 34;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeTransferred);
 			_repo.AddTableEntities(tableName, seedData);
 			var dt = DateTime.UtcNow;
 			await Task.Delay(1000);
@@ -166,33 +155,33 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 				new QueryBuilder().AppendCondition(ODataPredefinedFilters.TimestampLessThanOrEqual(dt));
 
 			// Act
-			var resp = await _sut.ArchiveDataFromTablesAsync<TableEntity>(
+			var resp = await _sut.MoveDataBetweenTablesAsync<TableEntity>(
 				tableQueryBuilder,
-				dataQueryBuilder);
+				dataQueryBuilder,
+				newTableName);
 
 			// Assert
-			foreach (var item in resp)
-			{
-				Assert.Equal(204, item.Status);
-			}
-			Assert.Equal(numOfEntriesThatWillBeRemoved, resp.Count);
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(numOfEntriesThatWillBeTransferred, resp.DataDeletedResponses.Count);
+			Assert.Equal(numOfEntriesThatWillBeTransferred, resp.DataAddedResponses.Count);
 
 			// Clean up
 			_repo.DeleteTable(table);
 			var archiveTable = _repo
-				.GetTables(ODataPredefinedFilters.TableNameExact(TablePrefixes.ArchiveTablePrefix + tableName));
+				.GetTables(ODataPredefinedFilters.TableNameExact(newTableName));
 			_repo.DeleteTable(archiveTable.First());
 		}
 
 		[Fact]
-		public async Task ArchiveDataFromTablesAsync_SingleTableAndSampleDataToRemoveUsingExpressionFilter_SuccessfullyRemovesData()
+		public async Task MoveDataBetweenTablesAsync_SingleTableAndSampleDataToTransferUsingExpressionFilter_SuccessfullyMovesData()
 		{
 			// Arrange
-			var prefix = "RmvUsingExprFil";
+			var prefix = "MoveUsingExprFil";
 			var tableName = EntityFactory.GenerateTableName(prefix);
+			var newTableName = EntityFactory.GenerateTableName(prefix);
 			var table = _repo.CreateTable(tableName);
-			int numOfEntriesThatWillBeRemoved = 52;
-			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeRemoved);
+			int numOfEntriesThatWillBeTransferred = 52;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeTransferred);
 			_repo.AddTableEntities(tableName, seedData);
 			var dt = DateTime.UtcNow;
 			await Task.Delay(1000);
@@ -203,22 +192,132 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 			Expression<Func<TableEntity, bool>> dataQuery = x => x.Timestamp.Value <= dt;
 
 			// Act
-			var resp = await _sut.ArchiveDataFromTablesAsync<TableEntity>(
+			var resp = await _sut.MoveDataBetweenTablesAsync<TableEntity>(
 				tableQuery,
-				dataQuery);
+				dataQuery,
+				newTableName);
 
 			// Assert
-			foreach (var item in resp)
-			{
-				Assert.Equal(204, item.Status);
-			}
-			Assert.Equal(numOfEntriesThatWillBeRemoved, resp.Count);
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(numOfEntriesThatWillBeTransferred, resp.DataDeletedResponses.Count);
+			Assert.Equal(numOfEntriesThatWillBeTransferred, resp.DataAddedResponses.Count);
 
 			// Clean up
 			_repo.DeleteTable(table);
 			var archiveTable = _repo
-				.GetTables(ODataPredefinedFilters.TableNameExact(TablePrefixes.ArchiveTablePrefix + tableName));
+				.GetTables(ODataPredefinedFilters.TableNameExact(newTableName));
 			_repo.DeleteTable(archiveTable.First());
+		}
+
+		[Fact]
+		public async Task MoveDataFromTablesAsync_SingleTableAndSampleDataToCopyUsingODataFilter_SuccessfullyCopiesData()
+		{
+			// Arrange
+			var prefix = "CopyUsiODataFilt";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var newTableName = EntityFactory.GenerateTableName(prefix);
+			var table = _repo.CreateTable(tableName);
+			int numOfEntriesThatWillBeTransferred = 34;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeTransferred);
+			_repo.AddTableEntities(tableName, seedData);
+			var dt = DateTime.UtcNow;
+			await Task.Delay(1000);
+			seedData = EntityFactory.GetVariedSeedData(53);
+			_repo.AddTableEntities(tableName, seedData);
+
+
+			var tableQueryBuilder =
+				new QueryBuilder().AppendCondition(ODataPredefinedFilters.TableNameExact(tableName));
+			var dataQueryBuilder =
+				new QueryBuilder().AppendCondition(ODataPredefinedFilters.TimestampLessThanOrEqual(dt));
+
+			// Act
+			var resp = await _sut.MoveDataBetweenTablesAsync<TableEntity>(
+				tableQueryBuilder,
+				dataQueryBuilder,
+				newTableName);
+
+			// Assert
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(numOfEntriesThatWillBeTransferred, resp.DataDeletedResponses.Count);
+			Assert.Equal(numOfEntriesThatWillBeTransferred, resp.DataAddedResponses.Count);
+
+			// Clean up
+			_repo.DeleteTable(table);
+			var archiveTable = _repo
+				.GetTables(ODataPredefinedFilters.TableNameExact(newTableName));
+			_repo.DeleteTable(archiveTable.First());
+		}
+
+		[Fact]
+		public async Task CopyDataFromTablesAsync_SingleTableAndSampleDataToCopyUsingExpressionFilter_SuccessfullyCopiedData()
+		{
+			// Arrange
+			var prefix = "CopyUsingExprFil";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var newTableName = EntityFactory.GenerateTableName(prefix);
+			var table = _repo.CreateTable(tableName);
+			int numOfEntriesThatWillBeCopied = 52;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesThatWillBeCopied);
+			_repo.AddTableEntities(tableName, seedData);
+			var dt = DateTime.UtcNow;
+			await Task.Delay(1000);
+			seedData = EntityFactory.GetVariedSeedData(63);
+			_repo.AddTableEntities(tableName, seedData);
+
+			Expression<Func<TableItem, bool>> tableQuery = x => x.Name == tableName;
+			Expression<Func<TableEntity, bool>> dataQuery = x => x.Timestamp.Value <= dt;
+
+			// Act
+			var resp = await _sut.CopyDataFromTablesAsync<TableEntity>(
+				tableQuery,
+				dataQuery,
+				newTableName);
+
+			// Assert
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(0, resp.DataDeletedResponses.Count);
+			Assert.Equal(numOfEntriesThatWillBeCopied, resp.DataAddedResponses.Count);
+
+			// Clean up
+			_repo.DeleteTable(table);
+			var archiveTable = _repo
+				.GetTables(ODataPredefinedFilters.TableNameExact(newTableName));
+			_repo.DeleteTable(archiveTable.First());
+		}
+
+		[Fact]
+		public async Task GetDataFromTablesAsync_SingleTableAndSampleDataToGetUsingExpressionFilter_SuccessfullyFetches()
+		{
+			// Arrange
+			var prefix = "CopyUsingExprFil";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var table = _repo.CreateTable(tableName);
+			int numOfEntriesFetched = 23;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntriesFetched);
+			_repo.AddTableEntities(tableName, seedData);
+			var dt = DateTime.UtcNow;
+			await Task.Delay(1000);
+			seedData = EntityFactory.GetVariedSeedData(43);
+			_repo.AddTableEntities(tableName, seedData);
+
+			Expression<Func<TableItem, bool>> tableQuery = x => x.Name == tableName;
+			Expression<Func<TableEntity, bool>> dataQuery = x => x.Timestamp.Value <= dt;
+
+			// Act
+			var resp = await _sut.GetDataFromTablesAsync<TableEntity>(
+				tableQuery,
+				dataQuery);
+			var tfResults = await resp.TablesFilterResults.EnumerateAsyncPageable();
+			var dfResults = await resp.DataFilterResults[tableName].EnumerateAsyncPageable();
+
+			// Assert
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(1, tfResults.Count);
+			Assert.Equal(numOfEntriesFetched, dfResults.Count);
+
+			// Clean up
+			_repo.DeleteTable(table);
 		}
 	}
 }

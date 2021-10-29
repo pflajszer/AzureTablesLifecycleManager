@@ -63,39 +63,44 @@ The sample project can be found under `AzureTablesLifecycleManager.SystemTests` 
 #### Query tables using LINQ Expression:
 
 ```csharp
-	public async Task ArchiveEverythingThatsOlderThanAYear()
+	public async Task<DataTransferResponse<T>> DoSomethingWithDataOlderThanAYearUsingLINQExpression<T>(int option) where T : class, ITableEntity, new()
 	{
-		try
-		{
-			// this query will return all the tables:
-			Expression<Func<TableItem, bool>> tableQuery = x => true;
-			
-			// this query will return all data in the above tables that matches the condition (all data older than 1 year ago)
-			Expression<Func<ProductEntity, bool>> dataQuery = x => x.Timestamp < DateTime.Now.AddYears(-1);
+		// this query will return all the tables:
+		Expression<Func<TableItem, bool>> tableQuery = x => true;
 
-			// this call will delete the data that match the above filters:
-			var dataDeletedResponse = await _api.DeleteDataFromTablesAsync<ProductEntity>(tableQuery, dataQuery);
-			
-			// the alternative to the above would be Archiving the tables first. 
-			// It's nothing fancy, but it will duplicate the table and add ARCHIVE prefix to its name
-			// which, at least for the initial period of using the library allows you to see what data would you delete:
-			var dataArchivedResponse = await _api.ArchiveDataFromTablesAsync<ProductEntity>(tableQuery, dataQuery);
-		}
-		catch (Exception ex)
-		{
+		// this query will return all data in the above tables that matches the condition (all data older than 1 year ago)
+		Expression<Func<T, bool>> dataQuery = x => x.Timestamp < DateTime.Now.AddYears(-1);
 
-			throw;
+		var dtr = new DataTransferResponse<T>();
+
+		switch (option)
+		{
+			case 1:
+				// Moving the data to a new table:
+				var newTableName = "newTableName";
+				newTableName.EnsureValidAzureTableName();
+				dtr = await _api.MoveDataBetweenTablesAsync<T>(tableQuery, dataQuery, newTableName);
+				break;
+			case 2:
+				// this call will delete the data that match the above filters:
+				dtr = await _api.DeleteDataFromTablesAsync<T>(tableQuery, dataQuery);
+				break;
+			case 3:
+				// ...or just fetch the data:
+				dtr = await _api.GetDataFromTablesAsync<T>(tableQuery, dataQuery);
+				break;
+			default:
+				break;
 		}
+
+		return dtr;
 	}
-
 ```
 
 #### Query tables using `IQueryBuilder` (OData filters under the surface)
 
 ```csharp
-	public async Task<IActionResult> ArchiveEverythingThatsOlderThanAYear()
-	{
-		try
+		public async Task<DataTransferResponse<T>> DoSomethingWithDataOlderThanAYearUsingQueryBuilder<T>(int option) where T : class, ITableEntity, new()
 		{
 			// this will return all the tables since it's an empty query:
 			var tableQuery =
@@ -106,22 +111,33 @@ The sample project can be found under `AzureTablesLifecycleManager.SystemTests` 
 				new QueryBuilder()
 					.AppendCondition(ODataPredefinedFilters.TimestampLessThanOrEqual(DateTime.Now.AddYears(-1)));
 
-			
-			// this will archive all the data that match the above filters:
-			var dataArchiveResponse = await _api.ArchiveDataFromTablesAsync<ProductEntity>(tableQuery, dataQuery);
+			var dtr = new DataTransferResponse<T>();
 
-			// or delete it permanently:
-			var dataDeleteResponse = await _api.ArchiveDataFromTablesAsync<ProductEntity>(tableQuery, dataQuery);
+			switch (option)
+			{
+				case 1:
+					// this will move all the data that match the above filters to a new table:
+					var newTableName = "someNewTable";
+					newTableName.EnsureValidAzureTableName();
+					dtr = await _api.MoveDataBetweenTablesAsync<T>(tableQuery, dataQuery, newTableName);
+					break;
+				case 2:
+					// ...or delete it permanently:
+					dtr = await _api.DeleteDataFromTablesAsync<T>(tableQuery, dataQuery);
+					break;
+				case 3:
+					// ...or just fetch the data:
+					dtr = await _api.GetDataFromTablesAsync<T>(tableQuery, dataQuery);
+					break;
+				default:
+					break;
+			}
 
-
-			return new OkResult();
+			return dtr;
 		}
-		catch (Exception ex)
-		{
-			throw;
-		}
-	}
 ```
+
+For a runnable example, run the `AzureTablesLifecycleManager.SystemTests` project. Be careful with the connection string you provide!
 
 ### IQueryBuilder
 
@@ -193,6 +209,30 @@ There are a few extensions methods for you to use:
 | `EnumerateAsyncPageable<T>()` | Enumerates and flattens the `AsyncPageable<T>` to a `IList<T>`, since this is the return type of Azure library methods       | `AsyncPageable<T>` | `IList<T>` |
 | `RegisterAzureTablesLifecycleManagement()`      | Registers all types needed in Dependency Injection container    | `IFunctionsHostBuilder` | `Task` |
 | `IsValidAzureTableName()`      | Determines if the given Azure Table name is valid with Azure requirements    | `string` | `bool` |
+| `EnsureValidAzureTableName()`      | Throws `InvalidAzureTableNameException` when the string doesn't match Azure table naming requirements    | `string` | `void` |
+| `AreOKResponses()`      | Determines if the transfer operations were successfull (201/204 response codes)     | `DataTransferResponse<T>` | `bool` |
+| `EnsureCorrectResponses()`      | Throws `TransferNotSuccessfulException` when any of the responses are not indicating success    | `DataTransferResponse<T>` | `void` |
+
+### Filters
+
+#### OData
+
+There are some premade filters in `ODataPredefinedFilters` class for you to explore.
+
+- TimestampLessThanOrEqual
+- TimestampLessThan
+- TimestampGreaterThanOrEqual
+- TimestampGreaterThan
+- PartitionKeyExact
+- RowKeyExact
+- TableNameExact
+- Custom (where you provide the column name, operator and the value)
+
+#### Expression
+
+There are some premade filters in `ExpressionPredefinedFilters` class for you to explore.
+
+- HasPrefix
 
 
 

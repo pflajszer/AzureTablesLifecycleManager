@@ -1,11 +1,6 @@
-﻿using Azure.Data.Tables;
-using AzureTablesLifecycleManager.AzureDAL.APIGateway;
-using AzureTablesLifecycleManager.Lib.Services;
+﻿using AzureTablesLifecycleManager.Lib.Extensions;
 using AzureTablesLifecycleManager.SystemTests;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using AzureTablesLifecycleManager.Lib.Extensions;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace AzureTablesLifecycleManager.SystemTests

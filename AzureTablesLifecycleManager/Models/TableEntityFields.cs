@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AzureTablesLifecycleManager.AzureDAL.Models
+namespace AzureTablesLifecycleManager.Models
 {
     public class TableEntityFields
     {

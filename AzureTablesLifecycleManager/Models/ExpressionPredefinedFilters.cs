@@ -2,7 +2,7 @@
 using System;
 using System.Linq.Expressions;
 
-namespace AzureTablesLifecycleManager.AzureDAL.Models
+namespace AzureTablesLifecycleManager.Models
 {
 	public static class ExpressionPredefinedFilters
 	{

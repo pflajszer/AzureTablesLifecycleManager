@@ -1,7 +1,7 @@
 ﻿using Azure.Data.Tables;
 using Azure.Data.Tables.Models;
 using AzureTablesLifecycleManager.AzureDAL.APIGateway;
-using AzureTablesLifecycleManager.AzureDAL.Models;
+using AzureTablesLifecycleManager.Models;
 using AzureTablesLifecycleManager.Lib.Extensions;
 using AzureTablesLifecycleManager.TestResources;
 using AzureTablesLifecycleManager.TestResources.Setup;

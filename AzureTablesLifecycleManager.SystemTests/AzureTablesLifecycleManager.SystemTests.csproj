@@ -5,12 +5,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.2.1" />
-    <PackageReference Include="AzureTablesLifecycleManager.Lib" Version="1.0.131" />
+    <PackageReference Include="AzureTablesLifecycleManager" Version="3.0.1" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.13" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AzureTablesLifecycleManager.AzureDAL\AzureTablesLifecycleManager.AzureDAL.csproj" />
     <ProjectReference Include="..\AzureTablesLifecycleManager.TestResources\AzureTablesLifecycleManager.TestResources.csproj" />
   </ItemGroup>
   <ItemGroup>

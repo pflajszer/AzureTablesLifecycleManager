@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using AzureTablesLifecycleManager.Lib.Extensions;
 
 namespace AzureTablesLifecycleManager.TestResources.Setup
 {
@@ -12,11 +11,13 @@ namespace AzureTablesLifecycleManager.TestResources.Setup
 		public static Func<string, string> GenerateTableName => (prefix) =>
 		{
 			var rndName = string.Empty;
+			var azureTableValidityPattern = @"^[A-Za-z][A-Za-z0-9]{2,62}$";
+			var regex = new Regex(azureTableValidityPattern);
 			do
 			{
 				rndName = prefix + Guid.NewGuid().ToString().Replace("-", "");
 			}
-			while (!rndName.IsValidAzureTableName());
+			while (!regex.Match(rndName).Success);
 
 			return rndName;
 		};

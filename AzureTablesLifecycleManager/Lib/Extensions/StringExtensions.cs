@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using AzureTablesLifecycleManager.Lib.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace AzureTablesLifecycleManager.Lib.Extensions
 {
@@ -21,6 +22,18 @@ namespace AzureTablesLifecycleManager.Lib.Extensions
 			var isValid = regex.Match(name).Success;
 			return isValid;
 
+		}
+
+		/// <summary>
+		/// Throws InvalidAzureTableNameException when the string doesn't match Azure table naming requirements
+		/// </summary>
+		/// <param name="name"></param>
+		public static void EnsureValidAzureTableName(this string name)
+		{
+			if (!name.IsValidAzureTableName())
+			{
+				throw new InvalidAzureTableNameException("Invalid Azure Table Name. Make sure the table name matches the following regex: ^[A-Za-z][A-Za-z0-9]{2,62}$");
+			}
 		}
 	}
 }

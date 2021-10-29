@@ -8,8 +8,4 @@
     <PackageReference Include="Azure.Data.Tables" Version="12.2.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\AzureTablesLifecycleManager.Lib\AzureTablesLifecycleManager.Lib.csproj" />
-  </ItemGroup>
-
 </Project>

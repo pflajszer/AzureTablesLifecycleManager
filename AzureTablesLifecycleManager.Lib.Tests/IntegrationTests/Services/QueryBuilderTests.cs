@@ -1,5 +1,5 @@
 ﻿using AzureTablesLifecycleManagement.AzureDAL.Models;
-using AzureTablesLifecycleManager.AzureDAL.Models;
+using AzureTablesLifecycleManager.Models;
 using AzureTablesLifecycleManager.Lib.Services;
 using System;
 using Xunit;

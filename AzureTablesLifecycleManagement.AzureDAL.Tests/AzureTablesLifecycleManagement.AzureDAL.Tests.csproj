@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AzureTablesLifecycleManager.AzureDAL\AzureTablesLifecycleManager.AzureDAL.csproj" />
     <ProjectReference Include="..\AzureTablesLifecycleManager.TestResources\AzureTablesLifecycleManager.TestResources.csproj" />
+    <ProjectReference Include="..\AzureTablesLifecycleManager\AzureTablesLifecycleManager.csproj" />
   </ItemGroup>
 
 </Project>
