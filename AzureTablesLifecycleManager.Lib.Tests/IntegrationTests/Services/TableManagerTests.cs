@@ -26,7 +26,7 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 		}
 
 		[Fact]
-		public async Task DeleteTablesAsync_EmptyFilter_SuccessfullyRemovesAllTables()
+		public async Task DropTablesAsync_EmptyFilter_SuccessfullyRemovesAllTables()
 		{
 			// Arrange
 			var tableName = EntityFactory.GenerateTableName("TEST");
@@ -34,14 +34,14 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 
 
 			// Act
-			var resp = await _sut.DeleteTablesAsync((QueryBuilder)null);
+			var resp = await _sut.DropTablesAsync((QueryBuilder)null);
 
 			// Assert
 			Assert.True(resp.AreOKResponses());
 		}
 
 		[Fact]
-		public async Task DeleteTablesAsync_PrefixFilterUsingExpression_SuccessfullyRemovesGivenTables()
+		public async Task DropTablesAsync_PrefixFilterUsingExpression_SuccessfullyRemovesGivenTables()
 		{
 			// Arrange
 			var prefix = "TEST";
@@ -56,7 +56,7 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 			}
 
 			// Act
-			var resp = await _sut.DeleteTablesAsync(ExpressionPredefinedFilters.HasPrefix(prefix));
+			var resp = await _sut.DropTablesAsync(ExpressionPredefinedFilters.HasPrefix(prefix));
 
 			// Assert
 			Assert.True(resp.AreOKResponses());
@@ -64,7 +64,7 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 
 			// Clean up
 			prefix = "TEST"; // rest of the tables
-			await _sut.DeleteTablesAsync(ExpressionPredefinedFilters.HasPrefix(prefix));
+			await _sut.DropTablesAsync(ExpressionPredefinedFilters.HasPrefix(prefix));
 		}
 
 		[Fact]
@@ -318,6 +318,72 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 
 			// Clean up
 			_repo.DeleteTable(table);
+		}
+
+		[Fact]
+		public async Task InsertDataIntoTableAsync_NewTableAndSampleDataToInsert_SuccessfullyInserts()
+		{
+			// Arrange
+			var prefix = "InsertData";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var numOfEntitiesToInsert = 38;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntitiesToInsert);
+
+			// Act
+			var resp = await _sut.InsertDataIntoTableAsync<TableEntity>(tableName, seedData);
+			var tfResults = resp.DataAddedResponses.ToList();
+
+			// Assert
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(numOfEntitiesToInsert, tfResults.Count);
+
+			// Clean up
+			_repo.DeleteTable(resp.TableAddedResponses.First().Value); 
+		}
+
+		[Fact]
+		public async Task InsertDataIntoTableAsync_ExistingTableAndSampleDataToInsert_SuccessfullyInserts()
+		{
+			// Arrange
+			var prefix = "InsertData";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var numOfEntitiesToInsert = 96;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntitiesToInsert);
+			var table = await _repo.CreateTableAsync(tableName);
+
+			// Act
+			var resp = await _sut.InsertDataIntoTableAsync<TableEntity>(tableName, seedData);
+			var taResults = resp.TableAddedResponses.ToList();
+			var daResults = resp.DataAddedResponses.ToList();
+
+			// Assert
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(numOfEntitiesToInsert, daResults.Count);
+			Assert.Empty(taResults);
+
+			// Clean up
+			_repo.DeleteTable(table);
+		}
+
+		[Fact]
+		public async Task InsertDataIntoTableAsync_NewTableAndEmptyDataCollectionToInsert_SuccessfullyInserts()
+		{
+			// Arrange
+			var prefix = "InsertData";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var numOfEntitiesToInsert = 0;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntitiesToInsert);
+
+			// Act
+			var resp = await _sut.InsertDataIntoTableAsync<TableEntity>(tableName, seedData);
+			var tfResults = resp.DataAddedResponses.ToList();
+
+			// Assert
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(numOfEntitiesToInsert, tfResults.Count);
+
+			// Clean up
+			_repo.DeleteTable(resp.TableAddedResponses.First().Value);
 		}
 	}
 }
