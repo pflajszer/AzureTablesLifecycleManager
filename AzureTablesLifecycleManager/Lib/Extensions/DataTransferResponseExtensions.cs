@@ -20,7 +20,7 @@ namespace AzureTablesLifecycleManager.Lib.Extensions
 				return false;
 			}
 
-			if (resp.TableAddedResponses.Any(x => x.GetRawResponse().Status != 201))
+			if (resp.TableAddedResponses.Any(x => x != null && x.GetRawResponse().Status != 201))
 			{
 				return false;
 			}
