@@ -12,7 +12,7 @@ Misusing this library can have some serious consequences - Please play around wi
 
 ## Business problem
 
-If you have used Azure Storage for some time, you might have learned about `Azure Lifecycle Management` provided by Azure for the hosted resources. Unfortunately, but probably by design, there is no way of controlling a lifecycling of your Azure Tables. While we should be extremely careful deleting data from a database, Azure Tables costs can pile up pretty quickly with audit trails and logs, but also some temp data that we leave there "for later" and never come back to it.
+If you have used Azure Storage for some time, you might have learned about `Azure Lifecycle Management` provided by Azure for the hosted resources. Unfortunately, but probably by design, there is no way of controlling the lifecycle of your Azure Tables. While we should be extremely careful deleting data from a database, Azure Tables costs can pile up pretty quickly with audit trails and logs, but also some temp data that we leave there "for later" and never come back to it.
 I decided to tackle that problem and implemented Azure Tables Lifecycle Manager.
 
 ## Capabilities
