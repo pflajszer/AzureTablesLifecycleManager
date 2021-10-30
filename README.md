@@ -20,8 +20,9 @@ Currently, `ITableManager` supports the following functionalities:
 | Move data between tables | This allows to **move** existing data from one or mutliple tables that match a provided query to a new or existing table | `MoveDataBetweenTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
 | Copy data between tables | This allows to **copy** existing data from one or mutliple tables that match a provided query to a new or existing table | `CopyDataFromTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
 | Delete data from tables | Delete data from one/mulitple tables matching given filters | `DeleteDataFromTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
-| Delete tables | Delete one/mulitple tables matching given filters | `DeleteTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
+| Drop tables | Delete one/mulitple tables matching given filters | `DropTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
 | Fetch data from tables | Fetch data from one/mulitple tables matching given filters | `GetDataFromTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
+| Insert data into a table | Insert given collection of `ITableEntity` into a new or existing table | `InsertDataIntoTableAsync<T>` |
 
 
 

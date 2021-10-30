@@ -4,6 +4,7 @@ using AzureTablesLifecycleManager.AzureDAL.APIGateway;
 using AzureTablesLifecycleManager.Lib.Extensions;
 using AzureTablesLifecycleManager.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace AzureTablesLifecycleManager.Lib.Services
 			_tableRepo = tableRepo;
 		}
 
-		public async Task<DataTransferResponse<TableItem>> DeleteTablesAsync(IQueryBuilder query)
+		public async Task<DataTransferResponse<TableItem>> DropTablesAsync(IQueryBuilder query)
 		{
 			var dtr = new DataTransferResponse<TableItem>();
 			dtr.ODataTableQueryBuilt = query?.Build();
@@ -31,7 +32,7 @@ namespace AzureTablesLifecycleManager.Lib.Services
 			return dtr;
 		}
 
-		public async Task<DataTransferResponse<TableItem>> DeleteTablesAsync(Expression<Func<TableItem, bool>> tableFilter)
+		public async Task<DataTransferResponse<TableItem>> DropTablesAsync(Expression<Func<TableItem, bool>> tableFilter)
 		{
 			var dtr = new DataTransferResponse<TableItem>();
 			dtr.ExpressionTableQuery = tableFilter;
@@ -164,7 +165,11 @@ namespace AzureTablesLifecycleManager.Lib.Services
 			dtr.TablesFilterResults = _tableRepo.GetTablesAsync(dtr.ODataTableQueryBuilt);
 			await foreach (var table in dtr.TablesFilterResults)
 			{
-				dtr.TableAddedResponses.Add(await _tableRepo.CreateTableAsync(newTableName));
+				var tableCreateResponse = await _tableRepo.CreateTableAsync(newTableName);
+				if (tableCreateResponse != null)
+				{
+					dtr.TableAddedResponses.Add(tableCreateResponse); 
+				}
 				var dataFilterResults = _tableRepo.GetTableEntitiesAsync<T>(table.Name, dtr.ODataDataQueryBuilt);
 				dtr.DataFilterResults[table.Name] = (dataFilterResults);
 				var dataAdded = await _tableRepo.AddTableEntitiesAsync<T>(newTableName, dataFilterResults);
@@ -195,7 +200,11 @@ namespace AzureTablesLifecycleManager.Lib.Services
 			await foreach (var table in dtr.TablesFilterResults)
 			{
 
-				dtr.TableAddedResponses.Add(await _tableRepo.CreateTableAsync(newTableName));
+				var tableCreateResponse = await _tableRepo.CreateTableAsync(newTableName);
+				if (tableCreateResponse != null)
+				{
+					dtr.TableAddedResponses.Add(tableCreateResponse);
+				}
 				var dataFilterResults = _tableRepo.GetTableEntitiesAsync<T>(table.Name, dtr.ExpressionDataQuery);
 				dtr.DataFilterResults[table.Name] = (dataFilterResults);
 				var dataAdded = await _tableRepo.AddTableEntitiesAsync<T>(newTableName, dataFilterResults);
@@ -206,6 +215,30 @@ namespace AzureTablesLifecycleManager.Lib.Services
 					dtr.DataDeletedResponses.AddRange(resps);
 				}
 			}
+			return dtr;
+		}
+
+		public async Task<DataTransferResponse<T>> InsertDataIntoTableAsync<T>(string tableName, IEnumerable<T> data) where T : class, ITableEntity, new()
+		{
+			var dtr = new DataTransferResponse<T>();
+
+			if (!tableName.IsValidAzureTableName())
+			{
+				dtr.IsNewTableNameValid = false;
+				return dtr;
+			}
+			else
+			{
+				var tableCreateResponse = await _tableRepo.CreateTableAsync(tableName);
+				if (tableCreateResponse != null)
+				{
+					dtr.TableAddedResponses.Add(tableCreateResponse);
+				}
+			}
+
+			var entitiesAddedResponse = await _tableRepo.AddTableEntitiesAsync<T>(tableName, data.ToList());
+			dtr.DataAddedResponses = entitiesAddedResponse.ToList();
+
 			return dtr;
 		}
 	}
