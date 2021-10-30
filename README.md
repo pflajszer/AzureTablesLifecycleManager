@@ -1,6 +1,10 @@
 ﻿
 # AzureTablesLifecycleManager
-Helper library to manage the lifecycle of Azure Table tables and entities
+Helper library to manage the lifecycle of Azure Table tables and entities.
+
+<p align="center">
+    <img src="Resources/logo.png">
+</p>
 
 ## A word of warning
 
