@@ -31,5 +31,6 @@ namespace AzureTablesLifecycleManager.AzureDAL.APIGateway
 		Task<IList<Response>> DeleteTableEntitiesAsync<T>(string tableName, Expression<Func<T, bool>> filter = null) where T : class, ITableEntity, new();
 		Task<IList<Response>> DeleteTableEntitiesAsync<T>(string tableName, string filter) where T : class, ITableEntity, new();
 		IList<Response> DeleteTableEntities<T>(string tableName, string filter) where T : class, ITableEntity, new();
+		Task<IList<Response>> UpdateTableEntitiesAsync<T>(string tableName, List<T> entities, TableUpdateMode updateMode = TableUpdateMode.Merge) where T : class, ITableEntity, new();
 	}
 }

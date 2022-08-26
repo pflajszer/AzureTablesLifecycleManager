@@ -205,6 +205,21 @@ namespace AzureTablesLifecycleManager.AzureDAL.APIGateway
 			return responses;
 		}
 
+		public async Task<IList<Response>> UpdateTableEntitiesAsync<T>(string tableName, List<T> entities, TableUpdateMode updateMode = TableUpdateMode.Merge) where T : class, ITableEntity, new()
+		{
+			var responseTasks = new List<Task<Response>>();
+			var tableClient = _tableClients
+				.Single(x => x.Name == tableName);
+			entities.ForEach(x =>
+			{
+				var resp = tableClient.UpdateEntityAsync<T>(x, x.ETag, updateMode);
+				responseTasks.Add(resp);
+			});
+
+			var responses = await Task.WhenAll(responseTasks);
+			return responses;
+		}
+
 		public async Task<IList<Response>> AddTableEntitiesAsync<T>(string tableName, AsyncPageable<T> entities) where T : class, ITableEntity, new()
 		{
 			var responseTasks = new List<Task<Response>>();

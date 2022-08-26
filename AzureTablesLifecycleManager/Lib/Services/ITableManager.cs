@@ -21,5 +21,6 @@ namespace AzureTablesLifecycleManager.Lib.Services
 		Task<DataTransferResponse<T>> MoveDataBetweenTablesAsync<T>(Expression<Func<TableItem, bool>> tableFilter, Expression<Func<T, bool>> dataFilter, string newTableName) where T : class, ITableEntity, new();
 		Task<DataTransferResponse<T>> MoveDataBetweenTablesAsync<T>(IQueryBuilder tableQuery, IQueryBuilder dataQuery, string newTableName) where T : class, ITableEntity, new();
 		Task<DataTransferResponse<T>> InsertDataIntoTableAsync<T>(string tableName, IEnumerable<T> data) where T : class, ITableEntity, new();
+		Task<DataTransferResponse<T>> UpdateDataInTableAsync<T>(string tableName, IEnumerable<T> data, TableUpdateMode tableUpdateMode = TableUpdateMode.Merge) where T : class, ITableEntity, new();
 	}
 }
