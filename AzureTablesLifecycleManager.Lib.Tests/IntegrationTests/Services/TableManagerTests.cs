@@ -385,5 +385,35 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 			// Clean up
 			_repo.DeleteTable(resp.TableAddedResponses.First().Value);
 		}
+
+		[Fact]
+		public async Task UpdateDataInTableAsync_NewTableAndValidDataCollectionToInsert_SuccessfullyInserts()
+		{
+			// Arrange
+			var prefix = "UpdateData";
+			var tableName = EntityFactory.GenerateTableName(prefix);
+			var numOfEntitiesToInsert = 20;
+			var seedData = EntityFactory.GetVariedSeedData(numOfEntitiesToInsert);
+			var tableAdded = await _sut.InsertDataIntoTableAsync<TableEntity>(tableName, seedData);
+			var data = await (await _sut.GetDataFromTablesAsync<TableEntity>(x => x.Name == tableName, x => true)).DataFilterResults[tableName].EnumerateAsyncPageable();
+			// Act
+			var dataToUpdate = data.Take(3);
+            foreach (var item in dataToUpdate)
+            {
+				item["Product"] = $"This is Now Updated + {Guid.NewGuid()}";
+            }
+			var resp = await _sut.UpdateDataInTableAsync<TableEntity>(tableName, dataToUpdate);
+			var tfResults = resp.DataUpdatedResponses.ToList();
+
+			// Assert
+			Assert.True(resp.AreOKResponses());
+			Assert.Equal(dataToUpdate.Count(), tfResults.Count);
+
+			var updatedData = await (await _sut.GetDataFromTablesAsync<TableEntity>(x => x.Name == tableName, x => true)).DataFilterResults[tableName].EnumerateAsyncPageable();
+			Assert.Equal(data.Count, updatedData.Count());
+
+			// Clean up
+			_repo.DeleteTable(tableAdded.TableAddedResponses.First().Value);
+		}
 	}
 }

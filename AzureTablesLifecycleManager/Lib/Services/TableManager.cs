@@ -241,5 +241,14 @@ namespace AzureTablesLifecycleManager.Lib.Services
 
 			return dtr;
 		}
+
+		public async Task<DataTransferResponse<T>> UpdateDataInTableAsync<T>(string tableName, IEnumerable<T> data, TableUpdateMode tableUpdateMode = TableUpdateMode.Merge) where T : class, ITableEntity, new()
+		{
+			var dtr = new DataTransferResponse<T>();
+			var entitiesAddedResponse = await _tableRepo.UpdateTableEntitiesAsync<T>(tableName, data.ToList(), tableUpdateMode);
+			dtr.DataUpdatedResponses = entitiesAddedResponse.ToList();
+
+			return dtr;
+		}
 	}
 }

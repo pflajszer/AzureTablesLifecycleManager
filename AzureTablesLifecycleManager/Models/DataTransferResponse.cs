@@ -11,6 +11,7 @@ namespace AzureTablesLifecycleManager.Models
 		public DataTransferResponse()
 		{
 			DataAddedResponses = new List<Response>();
+			DataUpdatedResponses = new List<Response>();
 			DataDeletedResponses = new List<Response>();
 			TableAddedResponses = new List<Response<TableItem>>();
 			TableDeletedResponses = new List<Response>();
@@ -32,6 +33,7 @@ namespace AzureTablesLifecycleManager.Models
 		public List<Response> TableDeletedResponses { get; set; }
 		public List<Response> DataAddedResponses { get; set; }
 		public List<Response> DataDeletedResponses { get; set; }
+		public List<Response> DataUpdatedResponses { get; set; }
 
 	}
 }
