@@ -6,6 +6,11 @@ Helper library to manage the lifecycle of Azure Table tables and entities.
     <img src="Resources/logo.png">
 </p>
 
+## Change Log
+
+### v1.2.0 / v1.2.0-beta > Update Entities Feature
+- You can now update existing entities using a `UpdateDataInTableAsync<T>` method. It'll update all entries passed in as `IEnumerable<T>` based on the items `ETag`, so it's important the updated entities are pulled directly from the table (i.e. using `GetDataFromTablesAsync<T>` method) and not generated manually. You can control how the data is updated by passing in an enum parameter `TableUpdateMode` - `Merge` (default) will only update changed properties, and `Replace` will replace the entire row.
+- Added a test for the happy path of the feature 
 ## A word of warning
 
 Misusing this library can have some serious consequences - Please play around with it using a Storage Emulator or `Azurite` (recommended) before connecting to prod. If you connect to your live storage account, this library has the power to wipe all data from it if used incorrectly. In example - providing two empty filters will return all the tables and all data within them, if you then invoke the delete method... you know what will happen ;-)
@@ -27,8 +32,7 @@ Currently, `ITableManager` supports the following functionalities:
 | Drop tables | Delete one/mulitple tables matching given filters | `DropTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
 | Fetch data from tables | Fetch data from one/mulitple tables matching given filters | `GetDataFromTablesAsync<T>` (overloads using `LINQ` and `IQueryBuilder` are available) |
 | Insert data into a table | Insert given collection of `ITableEntity` into a new or existing table | `InsertDataIntoTableAsync<T>` |
-
-
+| Update data in a table | Update given collection of `ITableEntity` in an existing table based on the items' `ETag`. `TableUpdateMode` - `Merge` (default) will only update changed properties, and `Replace` will replace the entire row. | `UpdateDataInTableAsync<T>` |
 
 ## Installation
 
@@ -65,7 +69,7 @@ public class MyClass
 	private readonly ITableManager _api;
 	private readonly IQueryBuilder _queryBuilder;
 
-	public MyService(IOpenWeatherMapAPIClient api, IQueryBuilder _queryBuilder)
+	public MyService(ITableManager api, IQueryBuilder _queryBuilder)
 	{
 		_api = api;
 		_queryBuilder = queryBuilder;
