@@ -8,9 +8,13 @@ Helper library to manage the lifecycle of Azure Table tables and entities.
 
 ## Change Log
 
+### v2.0.0 / v2.0.0-beta > .NET Standard  2.1 support
+- You can now install the library using .NET Standard 2.1. No other changes or dependencies changed
+
 ### v1.2.0 / v1.2.0-beta > Update Entities Feature
 - You can now update existing entities using a `UpdateDataInTableAsync<T>` method. It'll update all entries passed in as `IEnumerable<T>` based on the items `ETag`, so it's important the updated entities are pulled directly from the table (i.e. using `GetDataFromTablesAsync<T>` method) and not generated manually. You can control how the data is updated by passing in an enum parameter `TableUpdateMode` - `Merge` (default) will only update changed properties, and `Replace` will replace the entire row.
 - Added a test for the happy path of the feature 
+
 ## A word of warning
 
 Misusing this library can have some serious consequences - Please play around with it using a Storage Emulator or `Azurite` (recommended) before connecting to prod. If you connect to your live storage account, this library has the power to wipe all data from it if used incorrectly. In example - providing two empty filters will return all the tables and all data within them, if you then invoke the delete method... you know what will happen ;-)
