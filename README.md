@@ -8,6 +8,12 @@ Helper library to manage the lifecycle of Azure Table tables and entities.
 
 ## Change Log
 
+### v2.1.0 / v2.1.0-beta > Updated the way the library services are registered
+- `RegisterAzureTablesLifecycleManagement` marked as `Obsolete` and will be removed in v3.0.0
+- Added `AddAzureTablesLifecycleManagement` extension method of `IServiceCollection` to register the services. If you already have the old method in use, just replace `builder.RegisterAzureTablesLifecycleManagement()` with `builder.Services.AddAzureTablesLifecycleManagement()`
+- The new method is now using the static `Environment.GetEnvironmentVariable()` method instead of grabbing a registered `IConfiguration` instance. We're still checking for `AzureWebJobsStorage` setting. Alternatively, you can use an overload of that method and pass in your connection string directly: `AddAzureTablesLifecycleManagement(this IServiceCollection services, string connectionString)`.
+- Updated readme to reflect the changes
+
 ### v2.0.0 / v2.0.0-beta > .NET Standard  2.1 support
 - You can now install the library using .NET Standard 2.1. No other changes or dependencies changed
 
@@ -47,19 +53,38 @@ Currently, `ITableManager` supports the following functionalities:
 
 ## Setup
 
-When using dependency injection in .NET Core 3.X, you can register type like so, by registering a type in the ```ConfigureServices()``` method. To use the below extension method, you need to have an evironment variable called `AzureWebJobsStorage` with your Azure Storage Connection String as a value and ability to inject `IConfiguration`.
+When using dependency injection in .NET Core, you can register type like so, by registering a type in the ```ConfigureServices()``` method. To use the below extension method, you need to have an evironment variable called `AzureWebJobsStorage` with your Azure Storage Connection String as a value. Alternatively, you can pass in the connection string directly.
 
+
+### Azure Function app
 Startup.cs:
 ```csharp
 public override void Configure(IFunctionsHostBuilder builder)
 {
-	builder.RegisterAzureTablesLifecycleManagement();
+	builder.Services.AddAzureTablesLifecycleManagement();
+
+	// or pass the connection string directly:
+	builder.Services.AddAzureTablesLifecycleManagement("UseDevelopmentStorage=true");
 }
 ```
 
+### Web app
+Startup.cs/Program.cs:
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+	services.AddAzureTablesLifecycleManagement();
+
+	// or pass the connection string directly:
+	services.AddAzureTablesLifecycleManagement("UseDevelopmentStorage=true");
+}
+```
+
+
 Alternatively you can just call the below to register your services:
 ```csharp
-builder.Services.AddSingleton(p => new TableServiceClient(p.GetService<IConfiguration>()["AzureWebJobsStorage"]));
+var myConnectionString = "UseDevelopmentStorage=true";
+builder.Services.AddSingleton(p => new TableServiceClient(myConnectionString));
 builder.Services.AddSingleton<ITableRepository, TableRepository>();
 builder.Services.AddSingleton<ITableManager, TableManager>();
 builder.Services.AddSingleton<IQueryBuilder, QueryBuilder>();
@@ -236,7 +261,8 @@ There are a few extensions methods for you to use:
 | Method       | Description | Extension of | Returns |
 |--------------|-------------|--------------|----------
 | `EnumerateAsyncPageable<T>()` | Enumerates and flattens the `AsyncPageable<T>` to a `IList<T>`, since this is the return type of Azure library methods       | `AsyncPageable<T>` | `IList<T>` |
-| `RegisterAzureTablesLifecycleManagement()`      | Registers all types needed in Dependency Injection container    | `IFunctionsHostBuilder` | `Task` |
+| `RegisterAzureTablesLifecycleManagement()`      | **OBSOLETE**. Registers all types needed in Dependency Injection container    | `IFunctionsHostBuilder` | `Task` |
+| `AddAzureTablesLifecycleManagement()`      | Registers all types needed in Dependency Injection container    | `IServiceCollection` | `Task` |
 | `IsValidAzureTableName()`      | Determines if the given Azure Table name is valid with Azure requirements    | `string` | `bool` |
 | `EnsureValidAzureTableName()`      | Throws `InvalidAzureTableNameException` when the string doesn't match Azure table naming requirements    | `string` | `void` |
 | `AreOKResponses()`      | Determines if the transfer operations were successfull (201/204 response codes)     | `DataTransferResponse<T>` | `bool` |
