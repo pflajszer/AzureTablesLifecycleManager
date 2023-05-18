@@ -8,7 +8,7 @@ namespace AzureTablesLifecycleManager.Lib.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static void RegisterAzureTablesLifecycleManagement(this IServiceCollection services)
+        public static void AddAzureTablesLifecycleManagement(this IServiceCollection services)
         {
             services.AddSingleton(p => new TableServiceClient(Environment.GetEnvironmentVariable("AzureWebJobsStorage")));
             services.AddSingleton<ITableRepository, TableRepository>();
