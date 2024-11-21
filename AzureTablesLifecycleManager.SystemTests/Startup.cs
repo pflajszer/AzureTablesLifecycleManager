@@ -9,7 +9,7 @@ namespace AzureTablesLifecycleManager.SystemTests
 	{
 		public override void Configure(IFunctionsHostBuilder builder)
 		{
-			builder.RegisterAzureTablesLifecycleManagement();
+			builder.Services.AddAzureTablesLifecycleManagement();
 		}
 	}
 }

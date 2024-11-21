@@ -8,7 +8,7 @@
 		/// <summary>
 		/// Test whether a field is equal to a constant value
 		/// </summary>
-		public const string Equals = "eq";
+		public new const string Equals = "eq";
 
 		/// <summary>
 		/// Test whether a field is not equal to a constant value

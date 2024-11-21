@@ -1,6 +1,7 @@
 ﻿using AzureTablesLifecycleManager.Lib.Exceptions;
 using AzureTablesLifecycleManager.Models;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AzureTablesLifecycleManager.Lib.Extensions
@@ -20,7 +21,7 @@ namespace AzureTablesLifecycleManager.Lib.Extensions
 				return false;
 			}
 
-			if (resp.TableAddedResponses.Any(x => x != null && x.GetRawResponse().Status != 201))
+			if (resp.TableAddedResponses.Any(x => x != null && !(new List<int>() { 204, 409 }.Contains(x.GetRawResponse().Status))))
 			{
 				return false;
 			}
