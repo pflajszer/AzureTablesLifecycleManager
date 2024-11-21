@@ -8,6 +8,15 @@ Helper library to manage the lifecycle of Azure Table tables and entities.
 
 ## Change Log
 
+### v2.2.0 / v2.2.0-beta > Package updates
+
+- Package updates
+- `TableAddedResponses` correctness in `AreOKResponses<T>()` now return false if any response isn't in `[204, 409]`. Historically it was `201` for a created table and a `null` for conflict (so it was never assessed before). If you ever rely on response codes, you should take that into account since the codes have been updated in the upstream `Azure.Data.Tables` library. 
+- System tests were updated to `2.0.1` version
+- `ODataComparisonOperators.Equals` now overwrites the default `object.Equals` behaviour to surpress the warning.
+- Improved test assertions
+- Surpressing `CS8632` in `InvalidAzureTableNameException` and `TransferNotSuccessfulException` classes
+
 ### v2.1.0 / v2.1.0-beta > Updated the way the library services are registered
 - `RegisterAzureTablesLifecycleManagement` marked as `Obsolete` and will be removed in v3.0.0
 - Added `AddAzureTablesLifecycleManagement` extension method of `IServiceCollection` to register the services. If you already have the old method in use, just replace `builder.RegisterAzureTablesLifecycleManagement()` with `builder.Services.AddAzureTablesLifecycleManagement()`
