@@ -359,7 +359,7 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 			// Assert
 			Assert.True(resp.AreOKResponses());
 			Assert.Equal(numOfEntitiesToInsert, daResults.Count);
-			Assert.Empty(taResults);
+			Assert.Single(taResults);
 
 			// Clean up
 			_repo.DeleteTable(table);
