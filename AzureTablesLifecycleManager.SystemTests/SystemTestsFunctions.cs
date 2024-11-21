@@ -31,18 +31,10 @@ namespace AzureTablesLifecycleManager.SystemTests
 			[HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
 			ILogger log)
 		{
-			try
-			{
-				await DoSomethingWithDataOlderThanAYearUsingQueryBuilder<ProductEntity>(3);
-				await DoSomethingWithDataOlderThanAYearUsingLINQExpression<ProductEntity>(3);
+			await DoSomethingWithDataOlderThanAYearUsingQueryBuilder<ProductEntity>(3);
+			await DoSomethingWithDataOlderThanAYearUsingLINQExpression<ProductEntity>(3);
 
-				return new OkResult();
-			}
-			catch (Exception ex)
-			{
-
-				throw;
-			}
+			return new OkResult();
 		}
 
 		public async Task<DataTransferResponse<T>> DoSomethingWithDataOlderThanAYearUsingQueryBuilder<T>(int option) where T : class, ITableEntity, new()
