@@ -276,7 +276,7 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 
 			// Assert
 			Assert.True(resp.AreOKResponses());
-			Assert.Equal(0, resp.DataDeletedResponses.Count);
+			Assert.Empty(resp.DataDeletedResponses);
 			Assert.Equal(numOfEntriesThatWillBeCopied, resp.DataAddedResponses.Count);
 
 			// Clean up
@@ -313,7 +313,7 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 
 			// Assert
 			Assert.True(resp.AreOKResponses());
-			Assert.Equal(1, tfResults.Count);
+			Assert.Single(tfResults);
 			Assert.Equal(numOfEntriesFetched, dfResults.Count);
 
 			// Clean up
@@ -359,7 +359,7 @@ namespace AzureTablesLifecycleManager.Lib.Tests.IntegrationTests.Services
 			// Assert
 			Assert.True(resp.AreOKResponses());
 			Assert.Equal(numOfEntitiesToInsert, daResults.Count);
-			Assert.Empty(taResults);
+			Assert.Single(taResults);
 
 			// Clean up
 			_repo.DeleteTable(table);
