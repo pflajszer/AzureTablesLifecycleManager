@@ -1,0 +1,44 @@
+name: CI
+
+# Build gate for pull requests. Until this existed, nothing verified a PR at
+# all: nuget-release.yml only triggers on `v*` tags and only builds the library
+# project, so dependency bumps that cannot even restore (e.g. a package whose
+# new major dropped netcoreapp3.1) merged with an all-green PR.
+on:
+  pull_request:
+    branches: [master, test]
+  push:
+    branches: [master, test]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # The whole solution, not just the packable library — the test and
+      # SystemTests projects are exactly where TFM-incompatible bumps land.
+      - name: Restore
+        run: dotnet restore AzureTablesLifecycleManager.sln
+
+      - name: Build
+        # Microsoft.NET.Sdk.Functions 3.x runs a build-time generator
+        # (Microsoft.NET.Sdk.Functions.Generator.dll) that is itself a
+        # netcoreapp3.1 app. Runners no longer ship the 3.1 runtime, so without
+        # roll-forward that generator cannot launch and SystemTests fails with
+        # "You must install or update .NET to run this application".
+        env:
+          DOTNET_ROLL_FORWARD: LatestMajor
+        run: dotnet build AzureTablesLifecycleManager.sln --no-restore --configuration Release
+
+  # Tests are NOT run here yet. They are integration tests that require both an
+  # Azurite instance and the netcoreapp3.1 runtime, which is out of support and
+  # not installable on current ubuntu runners. Enabling them means retargeting
+  # the test projects first (they are IsPackable=false, so that does not affect
+  # the shipped library). The build job above still catches the restore/TFM
+  # breakage that motivated this workflow.
