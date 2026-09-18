@@ -7,7 +7,7 @@
     <PackageReference Include="Azure.Data.Tables" Version="12.9.1" />
     <PackageReference Include="AzureTablesLifecycleManager" Version="2.2.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.13" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.1.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AzureTablesLifecycleManager.TestResources\AzureTablesLifecycleManager.TestResources.csproj" />
