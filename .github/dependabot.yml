@@ -9,3 +9,19 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      # Every project in this repo targets netcoreapp3.1, and SystemTests is
+      # pinned to Azure Functions v3. The next major of each package below
+      # dropped support for that, so a major bump cannot restore here and
+      # Dependabot will keep reopening a PR that can never go green:
+      #
+      #   coverlet.collector 10.x  ships only build/net8.0|net9.0|net10.0
+      #                            assets (6.x shipped build/netstandard2.0)
+      #   Microsoft.NET.Sdk.Functions 4.x  declares a single net6.0 dependency
+      #                            group and requires AzureFunctionsVersion v4
+      #
+      # Drop the relevant entry once the affected projects are retargeted.
+      - dependency-name: "coverlet.collector"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.NET.Sdk.Functions"
+        update-types: ["version-update:semver-major"]
