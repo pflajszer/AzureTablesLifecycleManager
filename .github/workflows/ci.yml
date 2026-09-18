@@ -27,6 +27,13 @@ jobs:
         run: dotnet restore AzureTablesLifecycleManager.sln
 
       - name: Build
+        # Microsoft.NET.Sdk.Functions 3.x runs a build-time generator
+        # (Microsoft.NET.Sdk.Functions.Generator.dll) that is itself a
+        # netcoreapp3.1 app. Runners no longer ship the 3.1 runtime, so without
+        # roll-forward that generator cannot launch and SystemTests fails with
+        # "You must install or update .NET to run this application".
+        env:
+          DOTNET_ROLL_FORWARD: LatestMajor
         run: dotnet build AzureTablesLifecycleManager.sln --no-restore --configuration Release
 
   # Tests are NOT run here yet. They are integration tests that require both an
